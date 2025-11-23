@@ -5,8 +5,8 @@ from utils.security import hash_password, verify_password
 from database import get_db
 from schemas.user import LoginRequest, SignupRequest, UserResponse
 from models.user import User
-from utils.response import error
-from repositories.users_repo import create_user, get_user_for_email
+from utils.response import error, success
+from repositories.users_repo import create_user, get_user_for_email, get_user_for_name
 
 def login_api(payload: LoginRequest, db: Session = Depends(get_db)):
   user = get_user_for_email(payload, db)
@@ -18,13 +18,18 @@ def login_api(payload: LoginRequest, db: Session = Depends(get_db)):
     return error("Invalid password", 401)
   
   token = create_access_token({"sub": user.name})
+  response = "Bearer " + token
 
-  response_dict = {"success": True, "data": token}
-  return response_dict
+  return success(response)
 
 def signup_api(payload: SignupRequest, db: Session = Depends(get_db)):
-  existing = get_user_for_email(payload, db)
-  if existing:
+  existing_name = get_user_for_name(payload, db)
+  existing_email = get_user_for_email(payload, db)
+
+  if existing_name:
+    return error("Name already registered", 409)
+
+  if existing_email:
     return error("Email already registered", 409)
 
   hashed = hash_password(payload.password)
@@ -35,8 +40,13 @@ def signup_api(payload: SignupRequest, db: Session = Depends(get_db)):
     name=payload.name
   )
 
-  create_user(new_user, db)
-  
-  user_dict = UserResponse.from_orm(new_user).model_dump()
-  response_dict = {"success": True, "data": user_dict}
-  return response_dict
+  try:
+    create_user(new_user, db)
+    user_dict = UserResponse.from_orm(new_user).model_dump()
+    return success(user_dict)
+  except Exception:
+    db.rollback()
+    return error("db_error", 500)
+
+def logout_api():
+  return success("Logged out successfully")

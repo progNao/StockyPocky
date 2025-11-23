@@ -1,21 +1,26 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from utils.response import error
+from api.v1.users import delete_user_api, get_user_api, get_users_api, update_user_api
+from utils.auth import get_current_user
+from schemas.user import UpdateUserRequest
+from schemas.response import SuccessResponse
 from database import get_db
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_user)])
 
-# @router.get("/")
-# def get_users(db: Session = Depends(get_db)):
-#   # ダミー
-#   users = [{"id": 1, "name": "Nao"}, {"id": 2, "name": "Taro"}]
-#   return success(data=users)
+@router.get("/", response_model=SuccessResponse)
+def get_users(db: Session = Depends(get_db)):
+  return get_users_api(db)
 
+@router.get("/{user_id}", response_model=SuccessResponse)
+def get_user(user_id: UUID, db: Session = Depends(get_db)):
+  return get_user_api(user_id, db)
 
-# @router.get("/{user_id}")
-# def get_user(user_id: int, db: Session = Depends(get_db)):
-#   if user_id == 0:
-#     return error("Invalid user ID", 400)
+@router.put("/", response_model=SuccessResponse)
+def update_user(payload: UpdateUserRequest, db: Session = Depends(get_db)):
+  return update_user_api(payload, db)
 
-#   user = {"id": user_id, "name": "UserName"}
-#   return success(data=user)
+@router.delete("/{user_id}", response_model=SuccessResponse)
+def delete_user(user_id: UUID, db: Session = Depends(get_db)):
+  return delete_user_api(user_id, db)
