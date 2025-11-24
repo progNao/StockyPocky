@@ -1,10 +1,10 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from api.v1.users import delete_user_api, get_user_api, get_users_api, update_user_api
-from utils.auth import get_current_user
-from schemas.user import UpdateUserRequest
-from schemas.response import SuccessResponse
+from app.api.v1.users import delete_user_api, get_user_api, get_users_api, update_user_api
+from app.schemas.response import SuccessResponse
+from app.schemas.user import UpdateUserRequest
+from app.utils.auth import get_current_user
 from database import get_db
 
 router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_user)])

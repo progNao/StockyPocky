@@ -1,10 +1,10 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
 from jose import JWTError
-from utils.jwt import decode_access_token
-from database import get_db
 from sqlalchemy.orm import Session
-from repositories.users_repo import get_user_for_name_only
+from app.repositories.users_repo import get_user_for_name_only
+from app.utils.jwt import decode_access_token
+from database import get_db
 
 # JWTの設定
 SECRET_KEY = "supersecretkey"  # 本番では.env管理

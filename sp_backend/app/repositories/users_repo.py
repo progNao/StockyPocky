@@ -1,8 +1,8 @@
 from typing import Any
 from uuid import UUID
 from sqlalchemy.orm import Session
-from models.user import User
-from schemas.user import LoginRequest, SignupRequest, UpdateUserRequest
+from app.models.user import User
+from app.schemas.user import LoginRequest, SignupRequest
 
 def get_users(db: Session):
   return db.query(User).all()

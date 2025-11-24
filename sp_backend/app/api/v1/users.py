@@ -2,10 +2,10 @@ from uuid import UUID
 from fastapi import Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from utils.security import hash_password
-from schemas.user import UpdateUserRequest, UserResponse
-from utils.response import error, success
-from repositories.users_repo import delete_user, get_user, get_users, update_user
+from app.repositories.users_repo import delete_user, get_user, get_users, update_user
+from app.schemas.user import UpdateUserRequest, UserResponse
+from app.utils.response import error, success
+from app.utils.security import hash_password
 from database import get_db
 
 def get_users_api(db: Session):

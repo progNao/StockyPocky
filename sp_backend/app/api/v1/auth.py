@@ -1,12 +1,12 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from utils.jwt import create_access_token
-from utils.security import hash_password, verify_password
+from app.models.user import User
+from app.repositories.users_repo import create_user, get_user_for_email, get_user_for_name
+from app.schemas.user import LoginRequest, SignupRequest, UserResponse
+from app.utils.jwt import create_access_token
+from app.utils.response import success, error
+from app.utils.security import hash_password, verify_password
 from database import get_db
-from schemas.user import LoginRequest, SignupRequest, UserResponse
-from models.user import User
-from utils.response import error, success
-from repositories.users_repo import create_user, get_user_for_email, get_user_for_name
 
 def login_api(payload: LoginRequest, db: Session = Depends(get_db)):
   user = get_user_for_email(payload, db)
@@ -42,7 +42,7 @@ def signup_api(payload: SignupRequest, db: Session = Depends(get_db)):
 
   try:
     create_user(new_user, db)
-    user_dict = UserResponse.from_orm(new_user).model_dump()
+    user_dict = UserResponse.model_validate(new_user).model_dump()
     return success(user_dict)
   except Exception:
     db.rollback()
