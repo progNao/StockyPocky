@@ -1,17 +1,15 @@
 from uuid import UUID
-from fastapi import Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from app.repositories.users_repo import delete_user, get_user, get_user_for_email, get_user_for_name, get_users, update_user
+from app.repositories.users_repo import delete_user, get_user, get_user_for_email, get_user_for_email_check, get_user_for_name, get_user_for_name_check, get_users, update_user
 from app.schemas.user import UpdateUserRequest, UserResponse
 from app.utils.response import error, success
 from app.utils.security import hash_password
-from database import get_db
 
 def get_users_api(db: Session):
   users = get_users(db)
-  response_users = [UserResponse.model_validate(u) for u in users]
-  return success(response_users)
+  response = [UserResponse.model_validate(u) for u in users]
+  return success(response)
 
 def get_user_api(user_id: UUID, db: Session):
   user = __private_user_check(user_id, db)
@@ -21,28 +19,26 @@ def get_user_api(user_id: UUID, db: Session):
   
   return success(UserResponse.model_validate(user))
 
-def update_user_api(payload: UpdateUserRequest, db: Session = Depends(get_db)):
-  user = __private_user_check(payload.id, db)
+def update_user_api(request: UpdateUserRequest, db: Session):
+  user = __private_user_check(request.id, db)
   
-  if not payload.name == user.name:
-    existing_name = get_user_for_name(payload, db)
-    if existing_name:
-      return error("Name already registered", 409)
-  
-  if not payload.email == user.email:
-    existing_email = get_user_for_email(payload, db)
-    if existing_email:
-      return error("Email already registered", 409)
+  existing_name = get_user_for_name_check(request, db)
+  if existing_name:
+    return error("Name already registered", 409)
+
+  existing_email = get_user_for_email_check(request, db)
+  if existing_email:
+    return error("Email already registered", 409)
   
   if isinstance(user, JSONResponse):
     return user
   
-  if payload.name:
-    user.name = payload.name
-  if payload.email:
-    user.email = payload.email
-  if payload.password:
-    user.password = hash_password(payload.password)
+  if request.name:
+    user.name = request.name
+  if request.email:
+    user.email = request.email
+  if request.password:
+    user.password = hash_password(request.password)
     
   try:
     response = update_user(user, db)
@@ -63,6 +59,8 @@ def delete_user_api(user_id: UUID, db: Session):
   except Exception:
     db.rollback()
     return error("db_error", 500)
+
+# private
 
 def __private_user_check(user_id: UUID, db: Session):
   user = get_user(user_id, db)

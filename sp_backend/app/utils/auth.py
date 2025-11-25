@@ -28,13 +28,13 @@ def get_current_user(token: str = Depends(api_key_header), db: Session = Depends
 
   try:
     payload = decode_access_token(token_value)
-    username: str = payload.get("sub")
-    if username is None:
+    name: str = payload.get("sub")
+    if name is None:
       raise credentials_exception
   except JWTError:
     raise credentials_exception
 
-  user = get_user_for_name_only(username, db)
+  user = get_user_for_name_only(name, db)
   if user is None:
     raise credentials_exception
   return user

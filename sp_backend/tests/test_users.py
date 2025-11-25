@@ -90,21 +90,21 @@ async def test_update_duplicate_email(auth_client):
 
 async def test_update_duplicate_name(auth_client):
   await auth_client.post("/api/v1/auth/signup", json={
-    "email": "duptest2@example.com",
+    "email": "duptest2_user@example.com",
     "password": "password",
-    "name": "duptest2"
+    "name": "duptest2_user"
   })
   json={
-    "email": "dupname@example.com",
+    "email": "dupname_user@example.com",
     "password": "password",
-    "name": "dupName"
+    "name": "dupNameUser"
   }
   uuid = await __create_user_get_id(json, auth_client)
   response = await auth_client.put("/api/v1/users/", json={
     "id": uuid,
-    "email": "dupname@example.com",
+    "email": "dupname_user@example.com",
     "password": "password",
-    "name": "duptest2"
+    "name": "duptest2_user"
   })
   assert response.status_code == 409
   data = response.json()

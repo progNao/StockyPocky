@@ -8,12 +8,12 @@ from database import get_db
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login", response_model=SuccessResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
-  return login_api(payload, db)
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+  return login_api(request, db)
 
 @router.post("/signup", response_model=SuccessResponse)
-def signup(payload: SignupRequest, db: Session = Depends(get_db)):
-  return signup_api(payload, db)
+def signup(request: SignupRequest, db: Session = Depends(get_db)):
+  return signup_api(request, db)
 
 @router.post("/logout", response_model=SuccessResponse)
 def logout():

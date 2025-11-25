@@ -1,38 +1,44 @@
-from typing import Any
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.schemas.user import LoginRequest, SignupRequest
 
 def get_users(db: Session):
   return db.query(User).all()
 
-def get_user(payload: UUID, db: Session):
-  return db.query(User).filter(User.id == payload).first()
+def get_user(user_id: UUID, db: Session):
+  return db.query(User).filter(User.id == user_id).first()
 
-def get_user_for_name(payload: LoginRequest, db: Session):
-  return db.query(User).filter(User.name == payload.name).first()
+def get_user_for_name(request: User, db: Session):
+  return db.query(User).filter(User.name == request.name).first()
 
 def get_user_for_name_only(name: str, db: Session):
   return db.query(User).filter(User.name == name).first()
 
-def get_user_for_email(payload: LoginRequest, db: Session):
-  return db.query(User).filter(User.email == payload.email).first()
+def get_user_for_email(request: User, db: Session):
+  return db.query(User).filter(User.email == request.email).first()
 
-def create_user(payload: SignupRequest, db: Session):
-  db.add(payload)
-  __private_db_change(payload, db)
-  return payload
+def get_user_for_name_check(request: User, db: Session):
+  return db.query(User).filter(User.name == request.name, User.id != request.id).first()
 
-def update_user(payload: Any, db: Session):
-  __private_db_change(payload, db)
-  return payload
+def get_user_for_email_check(request: User, db: Session):
+  return db.query(User).filter(User.email == request.email, User.id != request.id).first()
 
-def delete_user(payload: Any, db: Session):
-  db.delete(payload)
+def create_user(request: User, db: Session):
+  db.add(request)
+  __private_db_change(request, db)
+  return request
+
+def update_user(request: User, db: Session):
+  __private_db_change(request, db)
+  return request
+
+def delete_user(request: User, db: Session):
+  db.delete(request)
   db.commit()
-  return payload
+  return request
 
-def __private_db_change(data: Any, db: Session):
+# private
+
+def __private_db_change(data: User, db: Session):
   db.commit()
   db.refresh(data)
