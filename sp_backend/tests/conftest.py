@@ -12,6 +12,22 @@ TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 engine_test = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine_test)
 
+@pytest.fixture
+async def auth_client(client):
+  # 事前ユーザー作成 & ログイン
+  await client.post("/api/v1/auth/signup", json={
+    "email": "test@example.com",
+    "password": "password",
+    "name": "loginTest"
+  })
+  login_res = await client.post("/api/v1/auth/login", json={
+    "email": "test@example.com",
+    "password": "password"
+  })
+  token = login_res.json()["data"]
+  client.headers.update({"Authorization": f"{token}"})
+  return client
+
 @pytest.fixture(scope="session", autouse=True)
 def truncate_test_db():
   yield  # ← テスト実行

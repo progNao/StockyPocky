@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from app.repositories.users_repo import delete_user, get_user, get_users, update_user
+from app.repositories.users_repo import delete_user, get_user, get_user_for_email, get_user_for_name, get_users, update_user
 from app.schemas.user import UpdateUserRequest, UserResponse
 from app.utils.response import error, success
 from app.utils.security import hash_password
@@ -23,6 +23,16 @@ def get_user_api(user_id: UUID, db: Session):
 
 def update_user_api(payload: UpdateUserRequest, db: Session = Depends(get_db)):
   user = __private_user_check(payload.id, db)
+  
+  if not payload.name == user.name:
+    existing_name = get_user_for_name(payload, db)
+    if existing_name:
+      return error("Name already registered", 409)
+  
+  if not payload.email == user.email:
+    existing_email = get_user_for_email(payload, db)
+    if existing_email:
+      return error("Email already registered", 409)
   
   if isinstance(user, JSONResponse):
     return user
