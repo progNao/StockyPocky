@@ -9,8 +9,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Engine 作成
 engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
+  DATABASE_URL,
+  pool_pre_ping=True,
 )
 
 # SessionLocal
@@ -22,8 +22,8 @@ Base = declarative_base()
 
 # FastAPI の dependency
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+  db = SessionLocal()
+  try:
+    yield db
+  finally:
+    db.close()

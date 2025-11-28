@@ -22,6 +22,3 @@ class LoginRequest(BaseModel):
 
 class SignupRequest(LoginRequest):
   name: str
-
-class UpdateUserRequest(SignupRequest):
-  id: UUID

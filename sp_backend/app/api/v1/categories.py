@@ -25,6 +25,7 @@ def create_category_api(request: CreateCategoryRequest, db: Session, current_use
     icon=request.icon,
     user_id=current_user.id
   )
+
   try:
     create_category(new_category, db)
     return success(CategoryResponse.model_validate(new_category))
@@ -37,6 +38,7 @@ def update_category_api(request: UpdateCategoryRequest, db: Session):
   
   if isinstance(category, JSONResponse):
     return category
+
   if request.name:
     category.name = request.name
   if request.icon:

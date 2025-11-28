@@ -53,8 +53,7 @@ async def test_update_user_success(auth_client):
     "name": "updateUser"
   }
   uuid = await __create_user_get_id(json, auth_client)
-  response = await auth_client.put("/api/v1/users/", json={
-    "id": uuid,
+  response = await auth_client.put(f"/api/v1/users/{uuid}", json={
     "email": "Update@example.com",
     "password": "password",
     "name": "Update"
@@ -77,8 +76,7 @@ async def test_update_duplicate_email(auth_client):
     "name": "dupEmail"
   }
   uuid = await __create_user_get_id(json, auth_client)
-  response = await auth_client.put("/api/v1/users/", json={
-    "id": uuid,
+  response = await auth_client.put(f"/api/v1/users/{uuid}", json={
     "email": "duptest@example.com",
     "password": "password",
     "name": "dupdup"
@@ -100,8 +98,7 @@ async def test_update_duplicate_name(auth_client):
     "name": "dupNameUser"
   }
   uuid = await __create_user_get_id(json, auth_client)
-  response = await auth_client.put("/api/v1/users/", json={
-    "id": uuid,
+  response = await auth_client.put(f"/api/v1/users/{uuid}", json={
     "email": "dupname_user@example.com",
     "password": "password",
     "name": "duptest2_user"
@@ -118,8 +115,7 @@ async def test_update_invalid_email(auth_client):
     "name": "invalidEmail"
   }
   uuid = await __create_user_get_id(json, auth_client)
-  response = await auth_client.put("/api/v1/users/", json={
-    "id": uuid,
+  response = await auth_client.put(f"/api/v1/users/{uuid}", json={
     "email": "aaexampleacom",
     "password": "password",
     "name": "invalidEmail"
@@ -135,8 +131,7 @@ async def test_update_short_password(auth_client):
     "name": "shortPass"
   }
   uuid = await __create_user_get_id(json, auth_client)
-  response = await auth_client.put("/api/v1/users/", json={
-    "id": uuid,
+  response = await auth_client.put(f"/api/v1/users/{uuid}", json={
     "email": "shortPass@example.com",
     "password": "pass",
     "name": "shortPass"

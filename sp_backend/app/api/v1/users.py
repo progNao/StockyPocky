@@ -1,8 +1,8 @@
 from uuid import UUID
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from app.repositories.users_repo import delete_user, get_user, get_user_for_email, get_user_for_email_check, get_user_for_name, get_user_for_name_check, get_users, update_user
-from app.schemas.user import UpdateUserRequest, UserResponse
+from app.repositories.users_repo import delete_user, get_user, get_user_for_email_check, get_user_for_name_check, get_users, update_user
+from app.schemas.user import SignupRequest, UserResponse
 from app.utils.response import error, success
 from app.utils.security import hash_password
 
@@ -19,14 +19,14 @@ def get_user_api(user_id: UUID, db: Session):
   
   return success(UserResponse.model_validate(user))
 
-def update_user_api(request: UpdateUserRequest, db: Session):
-  user = __private_user_check(request.id, db)
+def update_user_api(user_id: UUID, request: SignupRequest, db: Session):
+  user = __private_user_check(user_id, db)
   
-  existing_name = get_user_for_name_check(request, db)
+  existing_name = get_user_for_name_check(request, user_id, db)
   if existing_name:
     return error("Name already registered", 409)
 
-  existing_email = get_user_for_email_check(request, db)
+  existing_email = get_user_for_email_check(request, user_id, db)
   if existing_email:
     return error("Email already registered", 409)
   

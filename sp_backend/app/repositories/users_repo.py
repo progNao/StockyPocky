@@ -17,11 +17,11 @@ def get_user_for_name_only(name: str, db: Session):
 def get_user_for_email(request: User, db: Session):
   return db.query(User).filter(User.email == request.email).first()
 
-def get_user_for_name_check(request: User, db: Session):
-  return db.query(User).filter(User.name == request.name, User.id != request.id).first()
+def get_user_for_name_check(request: User, user_id: int, db: Session):
+  return db.query(User).filter(User.name == request.name, User.id != user_id).first()
 
-def get_user_for_email_check(request: User, db: Session):
-  return db.query(User).filter(User.email == request.email, User.id != request.id).first()
+def get_user_for_email_check(request: User, user_id: int, db: Session):
+  return db.query(User).filter(User.email == request.email, User.id != user_id).first()
 
 def create_user(request: User, db: Session):
   db.add(request)

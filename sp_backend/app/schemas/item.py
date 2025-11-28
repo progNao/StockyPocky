@@ -1,0 +1,46 @@
+from uuid import UUID
+from pydantic import BaseModel, field_validator
+
+class ItemResponse(BaseModel):
+  id: int
+  name: str
+  brand: str
+  unit: str
+  image_url: str
+  default_quantity: int
+  notes: str
+  is_favorite: bool
+  user_id: UUID
+  category_id: int
+  
+  model_config = {
+    "from_attributes": True
+  }
+
+class ItemRequest(BaseModel):
+  name: str
+  brand: str
+  unit: str
+  image_url: str
+  default_quantity: int
+  notes: str
+  is_favorite: bool
+  category_id: int
+  
+  @field_validator("name")
+  def check_name(cls, v):
+    if not v or v.strip() == "":
+      raise ValueError("Name is required")
+    return v
+  
+  @field_validator("default_quantity")
+  def check_default_quantity(cls, v):
+    if not v or v.strip() == "":
+      raise ValueError("DefaultQuantity is required")
+    return v
+  
+  @field_validator("is_favorite")
+  def check_is_favorite(cls, v):
+    if not v:
+      raise ValueError("IsFavorite is required")
+    return v
