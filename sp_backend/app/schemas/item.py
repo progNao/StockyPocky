@@ -32,15 +32,3 @@ class ItemRequest(BaseModel):
     if not v or v.strip() == "":
       raise ValueError("Name is required")
     return v
-  
-  @field_validator("default_quantity")
-  def check_default_quantity(cls, v):
-    if not v or v.strip() == "":
-      raise ValueError("DefaultQuantity is required")
-    return v
-  
-  @field_validator("is_favorite")
-  def check_is_favorite(cls, v):
-    if not v:
-      raise ValueError("IsFavorite is required")
-    return v

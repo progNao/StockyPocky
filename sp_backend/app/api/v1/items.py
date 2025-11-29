@@ -1,6 +1,7 @@
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.models.item import Item
+from app.models.user import User
 from app.repositories.items_repo import create_item, delete_item, get_items, get_items_by_id, update_item
 from app.schemas.item import ItemRequest, ItemResponse
 from app.utils.response import error, success
@@ -18,7 +19,7 @@ def get_item_api(item_id: int, db: Session):
   
   return success(ItemResponse.model_validate(item))
 
-def create_item_api(request: ItemRequest, db: Session):
+def create_item_api(request: ItemRequest, db: Session, current_user: User):
   new_item = Item(
     name=request.name,
     brand=request.brand,
@@ -26,7 +27,9 @@ def create_item_api(request: ItemRequest, db: Session):
     image_url=request.image_url,
     default_quantity=request.default_quantity,
     notes=request.notes,
-    is_favorite=request.is_favorite
+    is_favorite=request.is_favorite,
+    user_id=current_user.id,
+    category_id=request.category_id
   )
   
   try:
