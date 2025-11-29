@@ -18,11 +18,12 @@ async def test_get_users_success(auth_client):
     "password": "password",
     "name": "get_users_3"
   })
-  response = await auth_client.get("/api/v1/users/")
+  response = await auth_client.get("/api/v1/users")
   assert response.status_code == 200
   data = response.json()
   assert data["success"]
   assert isinstance(data["data"], list)
+  assert len(data["data"]) == 4
 
 # ===============
 # GetUser
@@ -37,10 +38,10 @@ async def test_get_user_success(auth_client):
   uuid = await __create_user_get_id(json, auth_client)
   response = await auth_client.get(f"/api/v1/users/{uuid}")
   assert response.status_code == 200
-  data = response.json()["data"]
-  assert data["email"] == "getUser@example.com"
-  assert data["name"] == "getUser"
-  assert response.json()["success"]
+  data = response.json()
+  assert data["success"]
+  assert data["data"]["email"] == "getUser@example.com"
+  assert data["data"]["name"] == "getUser"
 
 # ===============
 # UpdateUser
@@ -59,10 +60,10 @@ async def test_update_user_success(auth_client):
     "name": "Update"
   })
   assert response.status_code == 200
-  data = response.json()["data"]
-  assert data["email"] == "Update@example.com"
-  assert data["name"] == "Update"
+  data = response.json()
   assert response.json()["success"]
+  assert data["data"]["email"] == "Update@example.com"
+  assert data["data"]["name"] == "Update"
 
 async def test_update_duplicate_email(auth_client):
   await auth_client.post("/api/v1/auth/signup", json={
@@ -153,7 +154,9 @@ async def test_delete_user_success(auth_client):
   uuid = await __create_user_get_id(json, auth_client)
   response = await auth_client.delete(f"/api/v1/users/{uuid}")
   assert response.status_code == 200
-  assert response.json()["success"]
+  data = response.json()
+  assert data["success"]
+  assert data["data"]["email"] == "deleteUser@example.com"
 
 async def test_delete_notfound_user(auth_client):
   json={
@@ -170,6 +173,6 @@ async def test_delete_notfound_user(auth_client):
 
 async def __create_user_get_id(obj, auth_client):
   await auth_client.post("/api/v1/auth/signup", json=obj)
-  users = await auth_client.get("/api/v1/users/")
+  users = await auth_client.get("/api/v1/users")
   uuid = users.json()["data"][-1]['id']
   return uuid
