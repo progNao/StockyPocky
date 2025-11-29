@@ -9,6 +9,9 @@ def get_items(category_id: int, is_favorite: bool, db: Session):
     query = query.filter(Item.is_favorite == is_favorite)
   return query.all()
 
+def get_item_by_category(category_id: int, db: Session):
+  return db.query(Item).filter(Item.category_id == category_id).first()
+
 def get_items_by_id(item_id: int, db: Session):
   return db.query(Item).filter(Item.id == item_id).first()
 

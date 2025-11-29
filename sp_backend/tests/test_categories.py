@@ -123,3 +123,23 @@ async def test_delete_category_success(auth_client):
   assert response.status_code == 200
   data = response.json()
   assert data["success"]
+
+async def test_delete_category_used_item(auth_client):
+  category = await auth_client.post("/api/v1/categories/", json={
+    "name": "apple",
+    "icon": "🍎"
+  })
+  await auth_client.post("/api/v1/items/", json={
+    "name": "testName",
+    "brand": "brandName",
+    "unit": "unitName",
+    "image_url": "http://www.....",
+    "default_quantity": 10,
+    "notes": "noteName",
+    "is_favorite": True,
+    "category_id": category.json()["data"]["id"]
+  })
+  response = await auth_client.delete(f"/api/v1/categories/{category.json()["data"]["id"]}")
+  assert response.status_code == 400
+  data = response.json()
+  assert data["success"] is False

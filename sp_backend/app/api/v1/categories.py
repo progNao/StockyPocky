@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.category import Category
 from app.models.user import User
 from app.repositories.categories_repo import create_category, delete_category, get_categories, get_category_by_id, update_category
+from app.repositories.items_repo import get_item_by_category
 from app.schemas.category import CategoryResponse, CreateCategoryRequest, UpdateCategoryRequest
 from app.utils.response import error, success
 
@@ -56,6 +57,11 @@ def delete_category_api(category_id: int, db: Session):
   
   if isinstance(category, JSONResponse):
     return category
+  
+  item_exists = get_item_by_category(category_id, db)
+  
+  if item_exists:
+    return error("This category is used by items and cannot be deleted.", 400)
   
   try:
     delete_category(category, db)
