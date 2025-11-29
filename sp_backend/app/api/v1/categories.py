@@ -7,8 +7,8 @@ from app.repositories.items_repo import get_item_by_category
 from app.schemas.category import CategoryResponse, CreateCategoryRequest, UpdateCategoryRequest
 from app.utils.response import error, success
 
-def get_categories_api(db: Session):
-  categories = get_categories(db)
+def get_categories_api(db: Session, current_user: User):
+  categories = get_categories(current_user.id, db)
   response = [CategoryResponse.model_validate(c) for c in categories]
   return success(response)
 

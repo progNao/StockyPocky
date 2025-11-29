@@ -11,8 +11,8 @@ from database import get_db
 router = APIRouter(prefix="/categories", tags=["categories"], dependencies=[Depends(get_current_user)])
 
 @router.get("/", response_model=SuccessResponse)
-def get_categories(db: Session = Depends(get_db)):
-  return get_categories_api(db)
+def get_categories(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+  return get_categories_api(db, current_user)
 
 @router.get("/{category_id}", response_model=SuccessResponse)
 def get_category(category_id: int, db: Session = Depends(get_db)):

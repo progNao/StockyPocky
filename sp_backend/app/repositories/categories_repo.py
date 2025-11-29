@@ -1,8 +1,9 @@
+from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.category import Category
 
-def get_categories(db: Session):
-  return db.query(Category).all()
+def get_categories(user_id: UUID, db: Session):
+  return db.query(Category).filter(Category.user_id == user_id).all()
 
 def get_category_by_id(category_id: int, db: Session):
   return db.query(Category).filter(Category.id == category_id).first()

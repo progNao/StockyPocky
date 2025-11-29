@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from app.models.item import Item
 from app.models.user import User
 from app.repositories.items_repo import create_item, delete_item, get_items, get_items_by_id, update_item
+from app.repositories.stocks_repo import get_stock_by_item_id, update_stock
 from app.schemas.item import ItemRequest, ItemResponse
+from app.schemas.stock import StockRequest, StockResponse
 from app.utils.response import error, success
 
-def get_items_api(category_id: int, is_favorite: bool, db: Session):
-  items = get_items(category_id, is_favorite, db)
+def get_items_api(category_id: int, is_favorite: bool, db: Session, current_user: User):
+  items = get_items(current_user.id, category_id, is_favorite, db)
   response = [ItemResponse.model_validate(c) for c in items]
   return success(response)
 
@@ -80,6 +82,34 @@ def delete_item_api(item_id: int, db: Session):
     db.rollback()
     return error("db_error", 500)
 
+def get_stock_by_item_id_api(item_id: int, db: Session):
+  stock = __private_stock_check(item_id, db)
+  
+  if isinstance(stock, JSONResponse):
+    return stock
+  
+  return success(StockResponse.model_validate(stock))
+
+def update_stock_api(item_id: int, request: StockRequest, db: Session):
+  stock = __private_stock_check(item_id, db)
+
+  if isinstance(stock, JSONResponse):
+    return stock
+  
+  if request.quantity:
+    stock.quantity = request.quantity
+  if request.threshold:
+    stock.threshold = request.threshold
+  if request.location:
+    stock.location = request.location
+  
+  try:
+    response = update_stock(stock, db)
+    return success(StockResponse.model_validate(response))
+  except Exception:
+    db.rollback()
+    return error("db_error", 500)
+
 # private
 
 def __private_item_check(item_id: int, db: Session):
@@ -89,3 +119,11 @@ def __private_item_check(item_id: int, db: Session):
     return error("Item not found", 404)
   else:
     return item
+
+def __private_stock_check(item_id: int, db: Session):
+  stock = get_stock_by_item_id(item_id, db)
+  
+  if not stock:
+    return error("Stock not found", 404)
+  else:
+    return stock

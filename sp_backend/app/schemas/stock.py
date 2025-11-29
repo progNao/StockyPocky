@@ -1,0 +1,25 @@
+from uuid import UUID
+from pydantic import BaseModel, field_validator
+
+class StockResponse(BaseModel):
+  id: int
+  quantity: int
+  threshold: int
+  location: str
+  user_id: UUID
+  item_id: int
+  
+  model_config = {
+    "from_attributes": True
+  }
+
+class StockRequest(BaseModel):
+  quantity: int
+  threshold: int
+  location: str
+  
+  @field_validator("location")
+  def check_location(cls, v):
+    if not v or v.strip() == "":
+      raise ValueError("Location is required")
+    return v
