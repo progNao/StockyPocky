@@ -1,12 +1,15 @@
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.models.item import Item
+from app.models.shopping_list import ShoppingList
 from app.models.stock_history import StockHistory
 from app.models.user import User
 from app.repositories.items_repo import create_item, delete_item, get_items, get_items_by_id, update_item
+from app.repositories.shopping_list_repo import create_shopping_list, get_shopping_list_by_item, update_shopping_list
 from app.repositories.stock_history_repo import create_stock_history, get_stock_history_by_item_id
 from app.repositories.stocks_repo import get_stock_by_item_id, update_stock
 from app.schemas.item import ItemRequest, ItemResponse
+from app.schemas.shopping_list import ShoppingListResponse
 from app.schemas.stock import StockRequest, StockResponse
 from app.schemas.stock_history import StockHistoryResponse
 from app.utils.response import error, success
@@ -117,6 +120,7 @@ def update_stock_api(item_id: int, request: StockRequest, db: Session, current_u
   if request.location:
     stock.location = request.location
   
+  # 在庫履歴更新
   new_stock_history = StockHistory(
     change=stock.quantity - old_quantity,
     reason=request.reason,
@@ -128,10 +132,29 @@ def update_stock_api(item_id: int, request: StockRequest, db: Session, current_u
   try:
     stock_response = update_stock(stock, db)
     history_response = create_stock_history(new_stock_history, db)
-    return success({
-      "stock": StockResponse.model_validate(stock_response),
-      "history": StockHistoryResponse.model_validate(history_response),
-    })
+    # 在庫がなければ買い物リストに追加
+    shopping_list = get_shopping_list_by_item(current_user.id, item_id, db)
+    if shopping_list:
+      shopping_list.quantity += 1
+      list_response = update_shopping_list(shopping_list, db)
+      return success({
+        "stock": StockResponse.model_validate(stock_response),
+        "history": StockHistoryResponse.model_validate(history_response),
+        "shopping_list": ShoppingListResponse.model_validate(list_response),
+      })
+    else:
+      new_shopping_list = ShoppingList(
+        item_id=item_id,
+        quantity=1,
+        checked=False,
+        user_id=current_user.id
+      )
+      list_response = create_shopping_list(new_shopping_list, db)
+      return success({
+        "stock": StockResponse.model_validate(stock_response),
+        "history": StockHistoryResponse.model_validate(history_response),
+        "shopping_list": ShoppingListResponse.model_validate(list_response),
+      })
   except Exception:
     db.rollback()
     return error("db_error", 500)

@@ -8,6 +8,9 @@ def get_shopping_lists(user_id: UUID, db: Session):
 def get_shopping_list_by_id(shopping_list_id: int, db: Session):
   return db.query(ShoppingList).filter(ShoppingList.id == shopping_list_id).first()
 
+def get_shopping_list_by_item(user_id: int, item_id: int, db: Session):
+  return db.query(ShoppingList).filter(ShoppingList.user_id == user_id, ShoppingList.item_id == item_id).first()
+
 def create_shopping_list(request: ShoppingList, db: Session):
   db.add(request)
   __private_db_change(request, db)
