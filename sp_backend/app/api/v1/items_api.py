@@ -8,7 +8,7 @@ from app.repositories.stock_history_repo import create_stock_history, get_stock_
 from app.repositories.stocks_repo import get_stock_by_item_id, update_stock
 from app.schemas.item import ItemRequest, ItemResponse
 from app.schemas.stock import StockRequest, StockResponse
-from app.schemas.stock_history import StockHistoryRequest, StockHistoryResponse
+from app.schemas.stock_history import StockHistoryResponse
 from app.utils.response import error, success
 
 def get_items_api(category_id: int, is_favorite: bool, db: Session, current_user: User):
