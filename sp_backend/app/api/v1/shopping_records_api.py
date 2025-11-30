@@ -2,7 +2,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.models.shopping_record import ShoppingRecord
 from app.models.user import User
-from app.repositories.shopping_records_repo import create_shopping_record, delete_shopping_record, get_shopping_record_by_id, get_shopping_records, update_shopping_record
+from app.repositories.shopping_records_repo import create_shopping_record, delete_shopping_record, get_monthly_spending, get_shopping_record_by_id, get_shopping_records, get_spending_by_category, get_spending_by_item, update_shopping_record
 from app.schemas.shopping_record import ShoppingRecordRequest, ShoppingRecordResponse
 from app.utils.response import error, success
 
@@ -69,6 +69,30 @@ def delete_shopping_record_api(shopping_record_id: int, db: Session):
   try:
     delete_shopping_record(shopping_record, db)
     return success(ShoppingRecordResponse.model_validate(shopping_record))
+  except Exception:
+    db.rollback()
+    return error("db_error", 500)
+
+def get_monthly_spending_api(db: Session, current_user: User):
+  try:
+    data = get_monthly_spending(current_user.id, db)
+    return success([dict(row._mapping) for row in data])
+  except Exception:
+    db.rollback()
+    return error("db_error", 500)
+
+def get_spending_by_item_api(db: Session, current_user: User):
+  try:
+    data = get_spending_by_item(current_user.id, db)
+    return success([dict(row._mapping) for row in data])
+  except Exception:
+    db.rollback()
+    return error("db_error", 500)
+
+def get_spending_by_category_api(db: Session, current_user: User):
+  try:
+    data = get_spending_by_category(current_user.id, db)
+    return success([dict(row._mapping) for row in data])
   except Exception:
     db.rollback()
     return error("db_error", 500)
