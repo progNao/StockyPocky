@@ -2,12 +2,12 @@
 from app.models.stock import Stock
 from app.models.user import User
 from app.repositories.test.test_repo import test_create_stock
-from app.schemas.stock import StockRequest, StockResponse
+from app.schemas.stock import StockResponse, StockTestRequest
 from sqlalchemy.orm import Session
 from app.utils.response import error, success
 
 
-def create_stock_test_api(item_id: int, request: StockRequest, db: Session, current_user: User):
+def create_stock_test_api(item_id: int, request: StockTestRequest, db: Session, current_user: User):
   new_stock = Stock(
     quantity=request.quantity,
     threshold=request.threshold,

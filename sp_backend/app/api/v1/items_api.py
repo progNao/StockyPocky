@@ -93,22 +93,47 @@ def get_stock_by_item_id_api(item_id: int, db: Session):
   
   return success(StockResponse.model_validate(stock))
 
-def update_stock_api(item_id: int, request: StockRequest, db: Session):
+def update_stock_api(item_id: int, request: StockRequest, db: Session, current_user: User):
   stock = __private_stock_check(item_id, db)
 
   if isinstance(stock, JSONResponse):
     return stock
   
+  old_quantity = stock.quantity
+  
   if request.quantity:
+    if request.action == "increase":
+      stock.quantity += request.quantity
+    elif request.action == "decrease":
+      if stock.quantity - request.quantity < 0:
+        return error("Insufficient stock", 400)
+      stock.quantity -= request.quantity
+    elif request.action == "manual":
+      stock.quantity = request.quantity
+    else:
+      return error("Invalid action type", 400)
     stock.quantity = request.quantity
+
   if request.threshold:
     stock.threshold = request.threshold
   if request.location:
     stock.location = request.location
   
+  new_stock_history = StockHistory(
+    change=stock.quantity - old_quantity,
+    reason=request.reason,
+    memo=request.memo,
+    user_id=current_user.id,
+    item_id=item_id
+  )
+  
   try:
-    response = update_stock(stock, db)
-    return success(StockResponse.model_validate(response))
+    stock_response = update_stock(stock, db)
+    history_response = create_stock_history(new_stock_history, db)
+    return success({
+      "stock": StockResponse.model_validate(stock_response),
+      "history": StockHistoryResponse.model_validate(history_response),
+    })
   except Exception:
     db.rollback()
     return error("db_error", 500)
@@ -121,22 +146,6 @@ def get_stock_history_by_item_id_api(item_id: int, db: Session):
   
   response = [StockHistoryResponse.model_validate(c) for c in stock_history]
   return success(response)
-
-def create_stock_history_api(item_id: int, request: StockHistoryRequest, db: Session, current_user: User):
-  new_stock_history = StockHistory(
-    change=request.change,
-    reason=request.reason,
-    memo=request.memo,
-    user_id=current_user.id,
-    item_id=item_id
-  )
-  
-  try:
-    create_stock_history(new_stock_history, db)
-    return success(StockHistoryResponse.model_validate(new_stock_history))
-  except Exception:
-    db.rollback()
-    return error("db_error", 500)
   
 # private
 

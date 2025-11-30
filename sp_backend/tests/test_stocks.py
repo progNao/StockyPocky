@@ -29,25 +29,68 @@ async def test_get_stock_success(auth_client):
 # UpdateStock
 # ===============
 
-async def test_update_stock_success(auth_client):
+async def test_update_stock_success_increase(auth_client):
   item = await __create_category_item_stock(auth_client)
   response = await auth_client.put(f"/api/v1/items/{item.json()["data"]["id"]}/stock", json={
-    "quantity": 100,
-    "threshold": 200,
+    "reason": "test",
+    "memo": "test",
+    "action": "increase",
+    "quantity": 5,
+    "threshold": 30,
     "location": "update"
   })
   assert response.status_code == 200
   data = response.json()
   assert data["success"]
-  assert data["data"]["quantity"] == 100
-  assert data["data"]["threshold"] == 200
-  assert data["data"]["location"] == "update"
+  assert data["data"]["stock"]["quantity"] == 15
+  assert data["data"]["stock"]["threshold"] == 30
+  assert data["data"]["stock"]["location"] == "update"
+  assert data["data"]["history"]["change"] == 5
+
+async def test_update_stock_success_decrease(auth_client):
+  item = await __create_category_item_stock(auth_client)
+  response = await auth_client.put(f"/api/v1/items/{item.json()["data"]["id"]}/stock", json={
+    "reason": "test",
+    "memo": "test",
+    "action": "decrease",
+    "quantity": 5,
+    "threshold": 30,
+    "location": "update"
+  })
+  assert response.status_code == 200
+  data = response.json()
+  assert data["success"]
+  assert data["data"]["stock"]["quantity"] == 5
+  assert data["data"]["stock"]["threshold"] == 30
+  assert data["data"]["stock"]["location"] == "update"
+  assert data["data"]["history"]["change"] == -5
+
+async def test_update_stock_success_manual(auth_client):
+  item = await __create_category_item_stock(auth_client)
+  response = await auth_client.put(f"/api/v1/items/{item.json()["data"]["id"]}/stock", json={
+    "reason": "test",
+    "memo": "test",
+    "action": "manual",
+    "quantity": 20,
+    "threshold": 30,
+    "location": "update"
+  })
+  assert response.status_code == 200
+  data = response.json()
+  assert data["success"]
+  assert data["data"]["stock"]["quantity"] == 20
+  assert data["data"]["stock"]["threshold"] == 30
+  assert data["data"]["stock"]["location"] == "update"
+  assert data["data"]["history"]["change"] == 10
 
 async def test_update_stock_location_empty(auth_client):
   item = await __create_category_item_stock(auth_client)
   response = await auth_client.put(f"/api/v1/items/{item.json()["data"]["id"]}/stock", json={
-    "quantity": 100,
-    "threshold": 200,
+    "reason": "test",
+    "memo": "test",
+    "action": "manual",
+    "quantity": 20,
+    "threshold": 30,
     "location": ""
   })
   assert response.status_code == 422

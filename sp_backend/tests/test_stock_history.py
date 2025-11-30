@@ -26,35 +26,6 @@ async def test_get_stock_history_success(auth_client):
   assert isinstance(data["data"], list)
   assert len(data["data"]) == 3
 
-# ===============
-# CreateStockHistory
-# ===============
-
-async def test_create_stock_history_success(auth_client):
-  item = await __create_category_item_stock(auth_client)
-  response = await auth_client.post(f"/api/v1/items/{item.json()["data"]["id"]}/stock-history", json={
-    "change": 10,
-    "reason": "testreason",
-    "memo": "test"
-  })
-  assert response.status_code == 200
-  data = response.json()
-  assert data["success"]
-  assert data["data"]["change"] == 10
-  assert data["data"]["reason"] == "testreason"
-  assert data["data"]["memo"] == "test"
-
-async def test_create_stock_history_reason_empty(auth_client):
-  item = await __create_category_item_stock(auth_client)
-  response = await auth_client.post(f"/api/v1/items/{item.json()["data"]["id"]}/stock-history", json={
-    "change": 10,
-    "reason": "",
-    "memo": "test"
-  })
-  assert response.status_code == 422
-  data = response.json()
-  assert data["success"] is False
-
 # Private
 
 async def __create_category_item_stock(auth_client):

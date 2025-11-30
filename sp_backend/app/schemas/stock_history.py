@@ -14,12 +14,5 @@ class StockHistoryResponse(BaseModel):
   }
 
 class StockHistoryRequest(BaseModel):
-  change: int
   reason: str
   memo: str
-  
-  @field_validator("reason")
-  def check_location(cls, v):
-    if not v or v.strip() == "":
-      raise ValueError("Reason is required")
-    return v
