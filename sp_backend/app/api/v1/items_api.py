@@ -100,7 +100,6 @@ def update_stock_api(item_id: int, request: StockRequest, db: Session, current_u
     return stock
   
   old_quantity = stock.quantity
-  
   if request.quantity:
     if request.action == "increase":
       stock.quantity += request.quantity
@@ -112,7 +111,6 @@ def update_stock_api(item_id: int, request: StockRequest, db: Session, current_u
       stock.quantity = request.quantity
     else:
       return error("Invalid action type", 400)
-    stock.quantity = request.quantity
 
   if request.threshold:
     stock.threshold = request.threshold
