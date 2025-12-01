@@ -2,7 +2,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.models.shopping_list import ShoppingList
 from app.models.user import User
-from app.repositories.shopping_list_repo import create_shopping_list, delete_shopping_list, get_shopping_list_by_id, get_shopping_lists, update_shopping_list
+from app.repositories.shopping_list_repo import create_shopping_list, delete_shopping_list, get_shopping_list_by_id, get_shopping_list_by_item, get_shopping_lists, update_shopping_list
 from app.schemas.shopping_list import ShoppingListCheckRequest, ShoppingListRequest, ShoppingListResponse
 from app.utils.response import error, success
 
@@ -26,6 +26,12 @@ def create_shopping_list_api(request: ShoppingListRequest, db: Session, current_
     user_id=current_user.id,
     item_id=request.item_id
   )
+  
+  existing = get_shopping_list_by_item(current_user.id, request.item_id, db)
+  if existing:
+    existing.quantity += request.quantity
+    response = update_shopping_list(existing, db)
+    return success(ShoppingListResponse.model_validate(response))
   
   try:
     create_shopping_list(new_shopping_list, db)

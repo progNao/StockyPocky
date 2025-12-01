@@ -37,3 +37,15 @@ class StockTestRequest(BaseModel):
     if not v or v.strip() == "":
       raise ValueError("Location is required")
     return v
+
+class StockOnlyRequest(BaseModel):
+  quantity: int
+  threshold: int
+  location: str
+  item_id: int
+  
+  @field_validator("location")
+  def check_location(cls, v):
+    if not v or v.strip() == "":
+      raise ValueError("Location is required")
+    return v

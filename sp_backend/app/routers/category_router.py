@@ -23,9 +23,9 @@ def create_category(request: CreateCategoryRequest, db: Session = Depends(get_db
   return create_category_api(request, db, current_user)
 
 @router.put("", response_model=SuccessResponse)
-def update_user(request: UpdateCategoryRequest, db: Session = Depends(get_db)):
+def update_category(request: UpdateCategoryRequest, db: Session = Depends(get_db)):
   return update_category_api(request, db)
 
 @router.delete("/{category_id}", response_model=SuccessResponse)
-def delete_user(category_id: int, db: Session = Depends(get_db)):
+def delete_category(category_id: int, db: Session = Depends(get_db)):
   return delete_category_api(category_id, db)

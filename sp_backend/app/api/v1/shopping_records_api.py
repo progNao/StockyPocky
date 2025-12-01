@@ -1,9 +1,13 @@
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from app.api.v1.items_api import update_stock_api
 from app.models.shopping_record import ShoppingRecord
 from app.models.user import User
+from app.repositories.shopping_list_repo import delete_shopping_list, get_shopping_list_by_item
 from app.repositories.shopping_records_repo import create_shopping_record, delete_shopping_record, get_monthly_spending, get_shopping_record_by_id, get_shopping_records, get_spending_by_category, get_spending_by_item, update_shopping_record
+from app.repositories.stocks_repo import get_stock_by_item_id
 from app.schemas.shopping_record import ShoppingRecordRequest, ShoppingRecordResponse
+from app.schemas.stock import StockRequest
 from app.utils.response import error, success
 
 def get_shopping_records_api(db: Session, current_user: User):
@@ -28,9 +32,24 @@ def create_shopping_record_api(request: ShoppingRecordRequest, db: Session, curr
     bought_at=request.bought_at,
     user_id=current_user.id
   )
+  
+  stock = get_stock_by_item_id(request.item_id, db)
+  update_stock = StockRequest(
+    reason="shopping",
+    memo="",
+    action="increase",
+    quantity=request.quantity,
+    threshold=stock.threshold,
+    location=stock.location
+  )
+  
+  shopping_list = get_shopping_list_by_item(current_user.id, request.item_id, db)
 
   try:
     create_shopping_record(new_shopping_record, db)
+    update_stock_api(request.item_id, update_stock, db, current_user)
+    if shopping_list:
+      delete_shopping_list(shopping_list, db)
     return success(ShoppingRecordResponse.model_validate(new_shopping_record))
   except Exception:
     db.rollback()
