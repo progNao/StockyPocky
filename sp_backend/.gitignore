@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Env
+.env
+.venv/
+venv/
+
+# DB (SQLite 使う場合)
+*.sqlite3
+
+# Test
+.pytest_cache/
+.mypy_cache/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store

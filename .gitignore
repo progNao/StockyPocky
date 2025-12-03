@@ -1,0 +1,10 @@
+# Backend (FastAPI) ignores
+sp_backend/__pycache__/
+sp_backend/.env
+sp_backend/.pytest_cache/
+sp_backend/.mypy_cache/
+sp_backend/*.sqlite3
+sp_backend/venv/
+sp_backend/.DS_Store
+sp_backend/__pycache__/
+sp_backend/*.log
