@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { api } from "@/libs/api/client";
-import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -14,19 +13,17 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import axios from "axios";
-import { useUserStore } from "@/stores/user";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
-  const { setToken } = useAuthStore();
-  const { setUsername } = useUserStore();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const validate = () => {
-    if (!email || !password) {
-      return "メールアドレス、パスワードは必須です。";
+    if (!name || !email || !password) {
+      return "ユーザー名、メールアドレス、パスワードは必須です。";
     }
     // メールアドレス形式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,34 +36,25 @@ export default function LoginPage() {
     return null;
   };
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     const validationError = validate();
     if (validationError) {
       setError(validationError);
       return;
     }
-
     try {
-      const res = await api.post("/auth/login", {
+      await api.post("/auth/signup", {
+        name,
         email,
         password,
       });
-      const token = res.data.data.token;
-      const username = res.data.data.name;
-      localStorage.setItem("access_token", token);
-      setToken(token);
-      setUsername(username);
-      document.cookie = `access_token=${token}; path=/;`;
-      router.push("/dashboard");
+
+      router.push("/login");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
         const status = err.response.status;
-        if (status === 404) {
-          setError("ユーザーが見つかりません。");
-          return;
-        }
-        if (status === 401) {
-          setError("パスワードが違います。");
+        if (status === 409) {
+          setError("入力したユーザー名またはメールアドレスは登録済みです。");
           return;
         }
         // その他のサーバーエラー
@@ -145,6 +133,28 @@ export default function LoginPage() {
           </Alert>
         )}
 
+        {/* 名前 */}
+        <Typography
+          sx={{ textAlign: "left", marginBottom: 1, fontWeight: 600 }}
+        >
+          ユーザー名
+        </Typography>
+        <TextField
+          fullWidth
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="username"
+          variant="outlined"
+          InputProps={{
+            sx: {
+              backgroundColor: "white",
+              borderRadius: "30px",
+              paddingY: 0.5,
+            },
+          }}
+          sx={{ marginBottom: 3 }}
+        />
+
         {/* メールアドレス */}
         <Typography
           sx={{ textAlign: "left", marginBottom: 1, fontWeight: 600 }}
@@ -193,7 +203,7 @@ export default function LoginPage() {
         <Button
           fullWidth
           variant="contained"
-          onClick={handleLogin}
+          onClick={handleSignup}
           sx={{
             backgroundColor: "#32D26A",
             paddingY: 1.8,
@@ -208,8 +218,9 @@ export default function LoginPage() {
             },
           }}
         >
-          ログイン
+          サインアップ
         </Button>
+        {/* 戻るボタン */}
         <Button
           fullWidth
           variant="outlined"

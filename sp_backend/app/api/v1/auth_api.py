@@ -18,7 +18,10 @@ def login_api(request: LoginRequest, db: Session):
   token = create_access_token({"sub": user.name})
   response = "Bearer " + token
 
-  return success(response)
+  return success({
+    "token": response,
+    "name": user.name
+  })
 
 def signup_api(request: SignupRequest, db: Session):
   existing_name = get_user_for_name(request, db)
