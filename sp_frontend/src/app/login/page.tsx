@@ -54,6 +54,7 @@ export default function LoginPage() {
       const token = res.data.data.token;
       const username = res.data.data.name;
       localStorage.setItem("access_token", token);
+      localStorage.setItem("token_issued_at", Date.now().toString());
       setToken(token);
       setUsername(username);
       document.cookie = `access_token=${token}; path=/;`;

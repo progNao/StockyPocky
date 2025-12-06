@@ -400,7 +400,7 @@ export default function ItemDetailPage({
                 color: "white",
                 borderRadius: "24px",
                 width: "40%",
-                fontSize: "10px",
+                fontSize: "12px",
                 boxShadow: "0px 3px 8px rgba(0,0,0,0.1)",
               }}
             >
