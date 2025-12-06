@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 
-export default function EditCategoryPage() {
+export default function CategoryEditPage() {
   const categoryId = useCategoryStore((s) => s.selectedCategoryId);
   const router = useRouter();
   const [id, setId] = useState<number | null>();
@@ -32,6 +32,11 @@ export default function EditCategoryPage() {
     return null;
   };
 
+  const clear = () => {
+    setName("");
+    setIcon("");
+  };
+
   const handleUpdate = async () => {
     const validationError = validate();
     if (validationError) {
@@ -46,8 +51,7 @@ export default function EditCategoryPage() {
         icon,
       });
       setOpenSnackbar(true);
-      setName("");
-      setIcon("");
+      clear();
       router.push("/category");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
@@ -66,8 +70,7 @@ export default function EditCategoryPage() {
     try {
       await api.delete("/categories/" + id);
       setOpenSnackbar(true);
-      setName("");
-      setIcon("");
+      clear();
       router.push("/category");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
@@ -206,7 +209,7 @@ export default function EditCategoryPage() {
           borderRadius: "40px",
           fontWeight: 700,
           fontSize: "18px",
-          color: "#083614",
+          color: "#FFFFFF",
           boxShadow: "0 8px 16px rgba(50,210,106,0.4)",
           "&:hover": {
             backgroundColor: "#29C05F",

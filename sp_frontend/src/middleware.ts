@@ -7,7 +7,7 @@ export function middleware(req: NextRequest) {
     req.headers.get("Authorization")?.replace("Bearer ", "");
 
   // 保護したいページのパス
-  const protectedRoutes = ["/dashboard"];
+  const protectedRoutes = ["/dashboard", "/category"];
 
   const pathname = req.nextUrl.pathname;
 

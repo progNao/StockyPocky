@@ -14,7 +14,7 @@ import {
 import axios from "axios";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 
-export default function CreateCategoryPage() {
+export default function CategoryNewPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("");
@@ -27,6 +27,11 @@ export default function CreateCategoryPage() {
       return "カテゴリ名は必須です。";
     }
     return null;
+  };
+
+  const clear = () => {
+    setName("");
+    setIcon("");
   };
 
   const handleCreate = async () => {
@@ -42,8 +47,7 @@ export default function CreateCategoryPage() {
         icon,
       });
       setOpenSnackbar(true);
-      setName("");
-      setIcon("");
+      clear();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
         // その他のサーバーエラー
@@ -163,7 +167,7 @@ export default function CreateCategoryPage() {
           borderRadius: "40px",
           fontWeight: 700,
           fontSize: "18px",
-          color: "#083614",
+          color: "#FFFFFF",
           boxShadow: "0 8px 16px rgba(50,210,106,0.4)",
           "&:hover": {
             backgroundColor: "#29C05F",
