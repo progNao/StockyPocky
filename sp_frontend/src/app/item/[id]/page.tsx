@@ -389,20 +389,19 @@ export default function ItemDetailPage({
               marginBottom: 3,
             }}
           >
-            <Typography fontWeight="bold" fontSize="18px">
+            <Typography fontWeight="bold" fontSize="12px">
               最近の在庫履歴
             </Typography>
             <Button
               variant="contained"
-              onClick={() => router.push("/stock/history")}
+              onClick={() => router.push(`/stock/history/${unwrapParams.id}`)}
               sx={{
                 backgroundColor: "#25A56A",
                 color: "white",
                 borderRadius: "24px",
-                width: "10%",
-                fontSize: "18px",
+                width: "40%",
+                fontSize: "10px",
                 boxShadow: "0px 3px 8px rgba(0,0,0,0.1)",
-                marginBottom: 2,
               }}
             >
               在庫履歴一覧へ
