@@ -29,19 +29,19 @@ export default function ItemNewPage() {
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [unit, setUnit] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [, setImageUrl] = useState("");
   const [defaultQuantity, setDefaultQuantity] = useState(1);
   const [notes, setNotes] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [categoryId, setCategoryId] = useState(1);
   const [threshold, setThreshold] = useState(1);
   const [location, setLocation] = useState("");
-  const [error, setError] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const validate = () => {

@@ -27,6 +27,7 @@ import { useAuthStore } from "@/stores/auth";
 import { api } from "@/libs/api/client";
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/stores/user";
+import ListAltIcon from '@mui/icons-material/ListAlt';
 
 // モックデータ（後で API データに差し替え）
 const mockData: DashboardData = {
@@ -151,12 +152,13 @@ export default function DashboardPage() {
                 <Inventory2 fontSize="large" sx={{ color: "#32D26A" }} />
               </Box>
             </Box>
-            <Typography sx={{ mt: 1, fontSize: 10 }}>在庫一覧</Typography>
+            <Typography sx={{ mt: 1, fontSize: 10 }}>在庫</Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 4 }}>
           <Card sx={{ borderRadius: 2, p: 2, textAlign: "center" }}>
             <Box
+              
               sx={{
                 display: "flex",
                 justifyContent: "center",
@@ -164,6 +166,7 @@ export default function DashboardPage() {
               }}
             >
               <Box
+                onClick={() => router.push("/item")}
                 sx={{
                   width: 52,
                   height: 52,
@@ -172,12 +175,13 @@ export default function DashboardPage() {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  cursor: "pointer",
                 }}
               >
-                <Description fontSize="large" sx={{ color: "#32D26A" }} />
+                <ListAltIcon fontSize="large" sx={{ color: "#32D26A" }} />
               </Box>
             </Box>
-            <Typography sx={{ mt: 1, fontSize: 10 }}>メモ</Typography>
+            <Typography sx={{ mt: 1, fontSize: 10 }}>アイテムリスト</Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 4 }}>
@@ -426,7 +430,7 @@ export default function DashboardPage() {
                   mt: 0.5,
                 }}
               >
-                分析
+                メモ
               </Typography>
             </Box>
           </Grid>

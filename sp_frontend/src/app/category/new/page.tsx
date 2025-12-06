@@ -10,6 +10,7 @@ import {
   IconButton,
   Alert,
   Snackbar,
+  CircularProgress,
 } from "@mui/material";
 import axios from "axios";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -21,6 +22,7 @@ export default function CategoryNewPage() {
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const validate = () => {
     if (!name) {
@@ -42,6 +44,7 @@ export default function CategoryNewPage() {
       return;
     }
     try {
+      setLoading(true);
       await api.post("/categories", {
         name,
         icon,
@@ -58,6 +61,8 @@ export default function CategoryNewPage() {
       // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -175,7 +180,11 @@ export default function CategoryNewPage() {
         }}
         onClick={handleCreate}
       >
-        登録する
+        {loading ? (
+          <CircularProgress size={26} sx={{ color: "white" }} />
+        ) : (
+          "登録する"
+        )}
       </Button>
     </Box>
   );

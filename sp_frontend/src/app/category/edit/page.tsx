@@ -5,6 +5,7 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   IconButton,
   Snackbar,
   TextField,
@@ -24,6 +25,8 @@ export default function CategoryEditPage() {
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const validate = () => {
     if (!name) {
@@ -45,6 +48,7 @@ export default function CategoryEditPage() {
       return;
     }
     try {
+      setLoading(true);
       await api.put("/categories", {
         id,
         name,
@@ -63,11 +67,14 @@ export default function CategoryEditPage() {
       // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = async () => {
     try {
+      setDeleteLoading(true);
       await api.delete("/categories/" + id);
       setOpenSnackbar(true);
       clear();
@@ -82,6 +89,8 @@ export default function CategoryEditPage() {
       // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -217,7 +226,11 @@ export default function CategoryEditPage() {
         }}
         onClick={handleUpdate}
       >
-        更新する
+        {loading ? (
+          <CircularProgress size={26} sx={{ color: "white" }} />
+        ) : (
+          "更新する"
+        )}
       </Button>
       {/* 削除ボタン */}
       <Button
@@ -242,7 +255,11 @@ export default function CategoryEditPage() {
         }}
         onClick={handleDelete}
       >
-        削除する
+        {deleteLoading ? (
+          <CircularProgress size={26} sx={{ color: "white" }} />
+        ) : (
+          "削除する"
+        )}
       </Button>
     </Box>
   );

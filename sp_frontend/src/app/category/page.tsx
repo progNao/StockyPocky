@@ -110,6 +110,7 @@ export default function CategoryPage() {
             borderRadius: "40px",
             backgroundColor: "white",
             height: 48,
+            marginBottom: 2,
           },
           startAdornment: (
             <InputAdornment position="start">
@@ -185,7 +186,7 @@ export default function CategoryPage() {
           backgroundColor: "#3ECF8E",
         }}
       >
-        <AddIcon />
+        <AddIcon sx={{ fontSize: 32 }} />
       </Fab>
     </Box>
   );

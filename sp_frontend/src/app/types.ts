@@ -5,11 +5,44 @@ export interface Task {
   done: boolean;
 }
 
-export interface Item {
-  id: string;
+export interface Category {
+  id: number;
   name: string;
-  remaining: number;
+  icon: string;
+  user_id: string;
+}
+
+export interface Item {
+  id: number;
+  name: string;
+  brand: string;
+  unit: string;
+  image_url: string;
+  default_quantity: number;
+  notes: string;
+  is_favorite: boolean;
+  user_id: string;
+  category_id: number;
+}
+
+export interface Stock {
+  id: number;
+  quantity: number;
+  threshold: number;
+  location: string;
+  user_id: string;
+  item_id: number;
+}
+
+export interface ItemListDisplay {
+  id: number;
+  name: string;
+  categoryName: string;
+  stockQuantity: number;
+  isFavorite: boolean;
+  threshold: number;
   imageUrl: string;
+  location: string;
 }
 
 export interface ShoppingList {
@@ -23,11 +56,4 @@ export interface DashboardData {
   tasks: Task[];
   lowStockItems: Item[];
   recentShoppingLists: ShoppingList[];
-}
-
-export interface Category {
-  id: number;
-  name: string;
-  icon: string;
-  user_id: string;
 }
