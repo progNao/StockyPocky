@@ -45,6 +45,16 @@ export interface ItemListDisplay {
   location: string;
 }
 
+export interface StockHistory {
+  id: number;
+  change: number;
+  reason: string;
+  memo: string;
+  user_id: string;
+  item_id: number;
+  created_at: string;
+}
+
 export interface ShoppingList {
   id: string;
   name: string;
