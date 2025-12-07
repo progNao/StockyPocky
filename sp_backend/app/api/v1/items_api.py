@@ -67,6 +67,8 @@ def update_item_api(item_id: int, request: ItemRequest, db: Session):
     item.notes = request.notes
   if request.is_favorite:
     item.is_favorite = request.is_favorite
+  if request.category_id:
+    item.category_id = request.category_id
   
   try:
     response = update_item(item, db)
@@ -129,41 +131,37 @@ def update_stock_api(item_id: int, request: StockRequest, db: Session, current_u
     item_id=item_id
   )
   
-  try:
-    stock_response = update_stock(stock, db)
-    history_response = create_stock_history(new_stock_history, db)
-    # 在庫がなければ買い物リストに追加
-    if stock.quantity < stock.threshold:
-      shopping_list = get_shopping_list_by_item(current_user.id, item_id, db)
-      if shopping_list:
-        shopping_list.quantity += 1
-        list_response = update_shopping_list(shopping_list, db)
-        return success({
-          "stock": StockResponse.model_validate(stock_response),
-          "history": StockHistoryResponse.model_validate(history_response),
-          "shopping_list": ShoppingListResponse.model_validate(list_response),
-        })
-      else:
-        new_shopping_list = ShoppingList(
-          item_id=item_id,
-          quantity=1,
-          checked=False,
-          user_id=current_user.id
-        )
-        list_response = create_shopping_list(new_shopping_list, db)
-        return success({
-          "stock": StockResponse.model_validate(stock_response),
-          "history": StockHistoryResponse.model_validate(history_response),
-          "shopping_list": ShoppingListResponse.model_validate(list_response),
-        })
-    else:
+  stock_response = update_stock(stock, db)
+  history_response = create_stock_history(new_stock_history, db)
+  # 在庫がなければ買い物リストに追加
+  if stock.quantity < stock.threshold:
+    shopping_list = get_shopping_list_by_item(current_user.id, item_id, db)
+    if shopping_list:
+      shopping_list.quantity += 1
+      list_response = update_shopping_list(shopping_list, db)
       return success({
         "stock": StockResponse.model_validate(stock_response),
         "history": StockHistoryResponse.model_validate(history_response),
+        "shopping_list": ShoppingListResponse.model_validate(list_response),
       })
-  except Exception:
-    db.rollback()
-    return error("db_error", 500)
+    else:
+      new_shopping_list = ShoppingList(
+        item_id=item_id,
+        quantity=1,
+        checked=False,
+        user_id=current_user.id
+      )
+      list_response = create_shopping_list(new_shopping_list, db)
+      return success({
+        "stock": StockResponse.model_validate(stock_response),
+        "history": StockHistoryResponse.model_validate(history_response),
+        "shopping_list": ShoppingListResponse.model_validate(list_response),
+      })
+  else:
+    return success({
+      "stock": StockResponse.model_validate(stock_response),
+      "history": StockHistoryResponse.model_validate(history_response),
+    })
 
 def get_stock_history_by_item_id_api(item_id: int, db: Session):
   stock_history = __private_stock_history_check(item_id, db)

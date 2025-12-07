@@ -113,6 +113,7 @@ export default function ItemDetailPage({
     return {
       id: dataItems.id,
       name: dataItems.name,
+      categoryId: dataItems.category_id,
       categoryName: categoryMap.get(dataItems.category_id) ?? "未分類",
       stockQuantity: dataStocks ? dataStocks.quantity : 0,
       isFavorite: dataItems.is_favorite,
@@ -179,7 +180,7 @@ export default function ItemDetailPage({
 
     try {
       setLoading(true);
-      await api.put("/items/" + item.id + "/stock", {
+      await api.put(`/items/${item.id}/stock`, {
         reason: reason_in_de,
         action,
         quantity: quantity_in_de,
@@ -215,7 +216,7 @@ export default function ItemDetailPage({
     action = "manual";
     try {
       setLoading(true);
-      await api.put("/items/" + item.id + "/stock", {
+      await api.put(`/items/${item.id}/stock`, {
         reason,
         action,
         quantity,
@@ -290,7 +291,11 @@ export default function ItemDetailPage({
 
         {/* 更新画面 */}
         <IconButton
-          onClick={() => router.push("/item/edit")}
+          onClick={() => {
+            useItemStore.getState().setSelectedItem(item);
+            router.push("/item/edit");
+          }}
+          
           sx={{ color: "#154718" }}
         >
           <EditIcon />

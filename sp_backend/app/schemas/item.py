@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, field_validator
 
@@ -19,11 +20,11 @@ class ItemResponse(BaseModel):
 
 class ItemRequest(BaseModel):
   name: str
-  brand: str
-  unit: str
-  image_url: str
+  brand: Optional[str] = None
+  unit: Optional[str] = None
+  image_url: Optional[str] = None
   default_quantity: int
-  notes: str
+  notes: Optional[str] = None
   is_favorite: bool
   category_id: int
   

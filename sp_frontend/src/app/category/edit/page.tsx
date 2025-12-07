@@ -75,7 +75,7 @@ export default function CategoryEditPage() {
   const handleDelete = async () => {
     try {
       setDeleteLoading(true);
-      await api.delete("/categories/" + id);
+      await api.delete(`/categories/${id}`);
       setOpenSnackbar(true);
       clear();
       router.push("/category");
@@ -97,7 +97,7 @@ export default function CategoryEditPage() {
   useEffect(() => {
     const fetchCategory = async () => {
       try {
-        const res = await api.get("/categories/" + categoryId);
+        const res = await api.get(`/categories/${categoryId}`);
         const data = await res.data.data;
         setId(categoryId);
         setName(data.name);
@@ -232,6 +232,7 @@ export default function CategoryEditPage() {
           "更新する"
         )}
       </Button>
+      
       {/* 削除ボタン */}
       <Button
         fullWidth

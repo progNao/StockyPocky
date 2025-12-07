@@ -68,6 +68,7 @@ export default function ItemsPage() {
       return {
         id: item.id,
         name: item.name,
+        categoryId: item.category_id,
         categoryName: categoryMap.get(item.category_id) ?? "未分類",
         stockQuantity: stock ? stock.quantity : 0,
         isFavorite: item.is_favorite,

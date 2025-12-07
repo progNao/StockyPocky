@@ -1,95 +1,160 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
   TextField,
-  Button,
   IconButton,
-  Card,
-  CardMedia,
   MenuItem,
+  Button,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import { useRouter } from "next/navigation";
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import { api } from "@/libs/api/client";
+import axios from "axios";
+import { Category } from "@/app/types";
+import { uploadImage } from "@/libs/query/imageup";
+import imageCompression from "browser-image-compression";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import { useItemStore } from "@/stores/item";
 
 export default function ItemEditPage() {
   const router = useRouter();
-  //
-  // 🔹 モックデータ（後でここを API から取得する）
-  //
-  const mockItem = {
-    id: 1,
-    name: "ミネラルウォーター 2L",
-    category_id: 2,
-    image_url:
-      "https://images.unsplash.com/photo-1611095972694-c42f1b2f3f2c?w=800",
-    brand: "サンプルブランド",
-    unit: "個",
-    default_quantity: 1,
-    notes: "災害用にストック",
-    is_favorite: false,
+  const item = useItemStore().selectedItem;
+  const [itemId] = useState(item ? item.id : 0);
+  const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [unit, setUnit] = useState("");
+  const [defaultQuantity, setDefaultQuantity] = useState<number>(0);
+  const [notes, setNotes] = useState("");
+  const [isFavorite, setIsFavorite] = useState<boolean>();
+  const [categoryId, setCategoryId] = useState<number>(
+    item ? item.categoryId : 1
+  );
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
+  const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let changeFlg = false;
+
+  const validate = () => {
+    if (!name || !categoryId) {
+      return "アイテム名、カテゴリは必須です。";
+    }
+    return null;
   };
 
-  const mockCategories = [
-    { id: 1, name: "食品" },
-    { id: 2, name: "飲料" },
-    { id: 3, name: "日用品" },
-  ];
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    changeFlg = true;
+    const file = e.target.files?.[0];
+    if (!file) {
+      setPreviewUrl(imageUrl);
+      return;
+    }
 
-  //
-  // 🔹 フォーム state
-  //
-  const [name, setName] = useState(mockItem.name);
-  const [categoryId, setCategoryId] = useState(mockItem.category_id);
-  const [brand, setBrand] = useState(mockItem.brand);
-  const [unit, setUnit] = useState(mockItem.unit);
-  const [notes, setNotes] = useState(mockItem.notes);
-  const [defaultQuantity, setDefaultQuantity] = useState(
-    mockItem.default_quantity
-  );
-  const [imageUrl, setImageUrl] = useState(mockItem.image_url);
+    setImageFile(file);
+    setImageUrl(URL.createObjectURL(file));
 
-  //
-  // 🔹 保存処理（API は後で組む）
-  //
-  const handleSave = () => {
-    const payload = {
-      name,
-      category_id: categoryId,
-      brand,
-      unit,
-      notes,
-      default_quantity: defaultQuantity,
-      image_url: imageUrl,
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 800,
+      useWebWorker: true,
     };
 
-    console.log("送信データ:", payload);
-    alert("保存ボタンが押されました（API 未実装）");
+    try {
+      const compressed = await imageCompression(file, options);
+
+      // プレビュー用のURL
+      const preview = URL.createObjectURL(compressed);
+      setPreviewUrl(preview);
+
+      // Firebase Storage にアップロードする用の File
+      setImageFile(compressed);
+    } catch (err) {
+      console.error("画像圧縮エラー:", err);
+    }
   };
 
-  //
-  // 🔹 ダミー画像アップロード
-  //
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-
-    const file = e.target.files[0];
-    const localUrl = URL.createObjectURL(file); // プレビュー用
-    setImageUrl(localUrl);
+  const handleUpdate = async () => {
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      setOpenErrorSnackbar(true);
+      return;
+    }
+    try {
+      setLoading(true);
+      const url = await uploadImage(imageFile);
+      await api.put(`/items/${itemId}`, {
+        name,
+        brand,
+        unit,
+        image_url: url,
+        default_quantity: defaultQuantity,
+        notes,
+        is_favorite: isFavorite,
+        category_id: categoryId,
+      });
+      setOpenSnackbar(true);
+      router.push("/item");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        // その他のサーバーエラー
+        setError("サーバーエラーが発生しました。");
+        setOpenErrorSnackbar(true);
+        return;
+      }
+      // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
+      setError("ネットワークエラーが発生しました。");
+      setOpenErrorSnackbar(true);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        const res = await api.get(`/items/${itemId}`);
+        const data = await res.data.data;
+        setName(data.name);
+        setBrand(data.brand);
+        setUnit(data.unit);
+        setPreviewUrl(data.image_url);
+        setImageUrl(data.image_url);
+        setDefaultQuantity(data.default_quantity);
+        setNotes(data.notes);
+        setIsFavorite(data.is_favorite);
+
+        // カテゴリ取得
+        const categoriesRes = (await api.get("/categories")).data.data;
+        setCategories(categoriesRes);
+      } catch (err) {
+        setError("カテゴリ取得エラー:" + err);
+        setOpenErrorSnackbar(true);
+      }
+    };
+
+    fetchItem();
+  }, [itemId]);
 
   return (
     <Box
       sx={{
-        backgroundColor: "#F2FFF5",
         minHeight: "100vh",
+        backgroundColor: "#F2FFF5",
         padding: 3,
-        maxWidth: "100vw",
-        overflowX: "hidden",
       }}
     >
       {/* ヘッダー */}
@@ -102,10 +167,7 @@ export default function ItemEditPage() {
         }}
       >
         {/* 左スペース（戻るボタン） */}
-        <IconButton
-          onClick={() => router.push("/dashboard")}
-          sx={{ color: "#154718" }}
-        >
+        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
           <ArrowBackIosNewIcon />
         </IconButton>
 
@@ -121,147 +183,217 @@ export default function ItemEditPage() {
             transform: "translateX(-50%)",
           }}
         >
-          アイテム詳細
+          アイテム更新
         </Typography>
 
-        {/* 左スペース（戻るボタン） */}
+        {/* お気に入りアイコン */}
         <IconButton
-          onClick={() => router.push("/dashboard")}
-          sx={{ color: "#154718" }}
+          onClick={() => setIsFavorite(!isFavorite)}
+          sx={{
+            color: isFavorite ? "red" : "gray",
+            transition: "0.2s",
+          }}
         >
-          <EditRoundedIcon />
+          {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </IconButton>
       </Box>
 
-      {/* Image Upload */}
-      <Box sx={{ width: "92%", margin: "0 auto" }}>
-        <Card
-          sx={{
-            borderRadius: "24px",
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          <CardMedia
-            component="img"
-            image={imageUrl}
-            sx={{
-              height: 220,
-              objectFit: "cover",
-            }}
-          />
-
-          {/* アップロードボタン */}
-          <label>
-            <IconButton
-              component="span"
-              sx={{
-                position: "absolute",
-                bottom: 12,
-                right: 12,
-                backgroundColor: "rgba(0,0,0,0.6)",
-                color: "white",
-                "&:hover": { backgroundColor: "rgba(0,0,0,0.8)" },
-              }}
-            >
-              <PhotoCameraIcon />
-              <input
-                hidden
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-              />
-            </IconButton>
-          </label>
-        </Card>
-      </Box>
-
-      {/* Form */}
-      <Box sx={{ width: "92%", margin: "0 auto", marginTop: 3 }}>
-
-        <TextField
-          label="アイテム名"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          fullWidth
-          sx={{ marginBottom: 2 }}
-        />
-
-        <TextField
-          label="カテゴリ"
-          select
-          value={categoryId}
-          onChange={(e) => setCategoryId(Number(e.target.value))}
-          fullWidth
-          sx={{ marginBottom: 2 }}
-        >
-          {mockCategories.map((c) => (
-            <MenuItem key={c.id} value={c.id}>
-              {c.name}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          label="ブランド"
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-          fullWidth
-          sx={{ marginBottom: 2 }}
-        />
-
-        <TextField
-          label="単位"
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-          fullWidth
-          sx={{ marginBottom: 2 }}
-        />
-
-        <TextField
-          label="デフォルト個数"
-          type="number"
-          value={defaultQuantity}
-          onChange={(e) => setDefaultQuantity(Number(e.target.value))}
-          fullWidth
-          sx={{ marginBottom: 2 }}
-        />
-
-        <TextField
-          label="メモ"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          multiline
-          minRows={3}
-          fullWidth
-          sx={{ marginBottom: 2 }}
-        />
-      </Box>
-
-      {/* 保存ボタン */}
-      <Box
-        sx={{
-          marginTop: 4,
-          width: "92%",
-          marginLeft: "auto",
-          marginRight: "auto",
-        }}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenSnackbar(false)}
       >
+        <Alert severity="success" sx={{ width: "100%" }}>
+          登録しました
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      {/* アイテム名 */}
+      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
+        アイテム名 *
+      </Typography>
+      <TextField
+        fullWidth
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="例：トイレットペーパー"
+        InputProps={{
+          sx: {
+            backgroundColor: "white",
+            borderRadius: "20px",
+            paddingY: 0.5,
+          },
+        }}
+        sx={{ marginBottom: 3 }}
+      />
+
+      {/* カテゴリ */}
+      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
+        カテゴリ *
+      </Typography>
+      <TextField
+        select
+        fullWidth
+        value={categoryId}
+        onChange={(e) => setCategoryId(Number(e.target.value))}
+        placeholder="カテゴリを選択"
+        InputProps={{
+          sx: {
+            backgroundColor: "white",
+            borderRadius: "20px",
+            paddingY: 0.5,
+          },
+        }}
+        sx={{ marginBottom: 3 }}
+      >
+        {categories.map((c) => (
+          <MenuItem key={c.id} value={c.id}>
+            {c.icon}
+            {c.name}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      {/* ブランド名 */}
+      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
+        ブランド名
+      </Typography>
+      <TextField
+        fullWidth
+        value={brand}
+        onChange={(e) => setBrand(e.target.value)}
+        placeholder="例：カインズ"
+        InputProps={{
+          sx: {
+            backgroundColor: "white",
+            borderRadius: "20px",
+            paddingY: 0.5,
+          },
+        }}
+        sx={{ marginBottom: 3 }}
+      />
+
+      {/* 単位 */}
+      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>単位</Typography>
+      <TextField
+        fullWidth
+        value={unit}
+        onChange={(e) => setUnit(e.target.value)}
+        placeholder="例：個"
+        InputProps={{
+          sx: {
+            backgroundColor: "white",
+            borderRadius: "20px",
+            paddingY: 0.5,
+          },
+        }}
+        sx={{ marginBottom: 3 }}
+      />
+
+      {/* 画像 */}
+      <Box sx={{ marginBottom: 3 }}>
         <Button
           variant="contained"
-          fullWidth
+          component="label"
           sx={{
-            backgroundColor: "#2FA866",
-            paddingY: 1.6,
-            borderRadius: "12px",
-            fontSize: "18px",
+            backgroundColor: "#32D26A",
+            borderRadius: "20px",
             fontWeight: 700,
+            paddingY: 1.5,
           }}
-          onClick={handleSave}
         >
-          保存する
+          画像を選択する
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleImageChange}
+          />
         </Button>
+
+        {previewUrl && (
+          <Box
+            sx={{
+              marginTop: 2,
+              width: "200px", // 👈 固定幅に変更
+              height: "200px",
+              borderRadius: "16px",
+              overflow: "hidden",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              mx: "auto", // 👈 中央寄せ
+            }}
+          >
+            <img
+              src={previewUrl}
+              alt="preview"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover", // 👈 トリミングして綺麗に見せる
+                display: "block",
+              }}
+            />
+          </Box>
+        )}
       </Box>
+
+      {/* メモ */}
+      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
+        メモ（任意）
+      </Typography>
+      <TextField
+        fullWidth
+        multiline
+        minRows={3}
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="メモを入力"
+        InputProps={{
+          sx: {
+            backgroundColor: "white",
+            borderRadius: "20px",
+            paddingY: 1,
+          },
+        }}
+        sx={{ marginBottom: 4 }}
+      />
+
+      {/* 更新ボタン */}
+      <Button
+        fullWidth
+        variant="contained"
+        sx={{
+          backgroundColor: "#32D26A",
+          paddingY: 2,
+          marginY: 3,
+          borderRadius: "40px",
+          fontWeight: 700,
+          fontSize: "18px",
+          color: "#FFFFFF",
+          boxShadow: "0 8px 16px rgba(50,210,106,0.4)",
+          "&:hover": {
+            backgroundColor: "#29C05F",
+          },
+        }}
+        onClick={handleUpdate}
+        disabled={loading}
+      >
+        {loading ? (
+          <CircularProgress size={26} sx={{ color: "white" }} />
+        ) : (
+          "更新する"
+        )}
+      </Button>
     </Box>
   );
 }

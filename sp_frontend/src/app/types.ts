@@ -37,6 +37,7 @@ export interface Stock {
 export interface ItemListDisplay {
   id: number;
   name: string;
+  categoryId: number;
   categoryName: string;
   stockQuantity: number;
   isFavorite: boolean;

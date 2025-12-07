@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, field_validator
 
@@ -13,7 +14,7 @@ class CategoryResponse(BaseModel):
 
 class CreateCategoryRequest(BaseModel):
   name: str
-  icon: str
+  icon: Optional[str] = None
   
   @field_validator("name")
   def check_name(cls, v):

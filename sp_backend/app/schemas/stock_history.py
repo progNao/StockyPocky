@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel
 from datetime import datetime
@@ -16,5 +17,5 @@ class StockHistoryResponse(BaseModel):
   }
 
 class StockHistoryRequest(BaseModel):
-  reason: str
-  memo: str
+  reason: Optional[str] = None
+  memo: Optional[str] = None
