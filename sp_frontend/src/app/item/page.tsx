@@ -158,7 +158,7 @@ export default function ItemsPage() {
             transform: "translateX(-50%)",
           }}
         >
-          アイテム一覧
+          アイテムリスト
         </Typography>
       </Box>
 

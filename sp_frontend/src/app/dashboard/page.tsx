@@ -281,6 +281,7 @@ export default function DashboardPage() {
               }}
             >
               <Box
+                onClick={() => router.push("/shopping-list")}
                 sx={{
                   width: 52,
                   height: 52,
@@ -289,6 +290,7 @@ export default function DashboardPage() {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  cursor: "pointer",
                 }}
               >
                 <ShoppingCart fontSize="large" sx={{ color: "#32D26A" }} />
@@ -515,7 +517,7 @@ export default function DashboardPage() {
           <Grid>
             <Box
               sx={{ textAlign: "center", cursor: "pointer" }}
-              onClick={() => router.push("/list")}
+              onClick={() => router.push("/shopping-list")}
             >
               <ShoppingCart sx={{ color: "#7A7A7A", fontSize: 28 }} />
               <Typography

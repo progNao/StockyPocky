@@ -57,9 +57,22 @@ export interface StockHistory {
 }
 
 export interface ShoppingList {
-  id: string;
+  id: number;
+  quantity: number;
+  checked: boolean;
+  user_id: string;
+  item_id: number;
+}
+
+export interface ShoppingListDisplay {
+  id: number;
+  quantity: number;
+  checked: boolean;
+  user_id: string;
+  item_id: number;
   name: string;
-  itemCount: number;
+  image_url: string;
+  notes: string;
 }
 
 export interface DashboardData {

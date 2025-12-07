@@ -85,7 +85,7 @@ export default function CategoryPage() {
             transform: "translateX(-50%)",
           }}
         >
-          カテゴリ一覧
+          カテゴリリスト
         </Typography>
       </Box>
 
