@@ -8,6 +8,7 @@ class ShoppingListResponse(BaseModel):
   checked: bool
   user_id: UUID
   item_id: int
+  added_at: datetime
   
   model_config = {
     "from_attributes": True

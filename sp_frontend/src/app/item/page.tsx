@@ -27,6 +27,7 @@ import { api } from "@/libs/api/client";
 import LoadingScreen from "@/components/LoadingScreen";
 import CategoryIcon2 from '@mui/icons-material/Category';
 import { useItemStore } from "@/stores/item";
+import Footer from "@/components/Footer";
 
 export default function ItemsPage() {
   const router = useRouter();
@@ -276,7 +277,7 @@ export default function ItemsPage() {
       </Box>
 
       {/* アイテムリスト */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 20, }}>
         {filteredItems.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
             一致するアイテムがありません
@@ -354,10 +355,14 @@ export default function ItemsPage() {
           bottom: 40,
           right: 30,
           backgroundColor: "#3ECF8E",
+          marginBottom: 10,
         }}
       >
         <AddIcon sx={{ fontSize: 32 }} />
       </Fab>
+
+      {/* 下部ナビバー（仮） */}
+      <Footer />
     </Box>
   );
 }

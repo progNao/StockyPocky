@@ -62,6 +62,7 @@ export interface ShoppingList {
   checked: boolean;
   user_id: string;
   item_id: number;
+  added_at: string;
 }
 
 export interface ShoppingListDisplay {
@@ -73,11 +74,10 @@ export interface ShoppingListDisplay {
   name: string;
   image_url: string;
   notes: string;
+  added_at: string;
 }
 
 export interface DashboardData {
   userName: string;
   tasks: Task[];
-  lowStockItems: Item[];
-  recentShoppingLists: ShoppingList[];
 }

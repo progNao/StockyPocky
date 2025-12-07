@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { Category } from "../types";
 import { api } from "@/libs/api/client";
 import { useCategoryStore } from "@/stores/category";
+import Footer from "@/components/Footer";
 
 export default function CategoryPage() {
   const router = useRouter();
@@ -184,10 +185,14 @@ export default function CategoryPage() {
           bottom: 40,
           right: 30,
           backgroundColor: "#3ECF8E",
+          marginBottom: 10,
         }}
       >
         <AddIcon sx={{ fontSize: 32 }} />
       </Fab>
+
+      {/* 下部ナビバー（仮） */}
+      <Footer />
     </Box>
   );
 }

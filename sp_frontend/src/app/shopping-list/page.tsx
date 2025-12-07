@@ -22,6 +22,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
+import Footer from "@/components/Footer";
 
 export default function ShoppingListPage() {
   const router = useRouter();
@@ -36,6 +37,19 @@ export default function ShoppingListPage() {
   const [checkedItems, setCheckedItems] = useState<{ [key: number]: boolean }>(
     {}
   );
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+
+    const yyyy = d.getFullYear();
+    const MM = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+
+    return `${yyyy}/${MM}/${dd} ${hh}:${mm}:${ss}`;
+  };
 
   const mergeItemData = (
     dataItems: Item[],
@@ -53,6 +67,7 @@ export default function ShoppingListPage() {
         name: item ? item.name : "",
         image_url: item ? item.image_url : "",
         notes: item ? item.notes : "",
+        added_at: shopping.added_at,
       };
     });
     return result;
@@ -264,6 +279,9 @@ export default function ShoppingListPage() {
                 <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
                   購入数：{item.quantity}
                 </Typography>
+                <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
+                  {formatDate(item.added_at)}
+                </Typography>
               </CardContent>
 
               {/* メモ */}
@@ -336,10 +354,14 @@ export default function ShoppingListPage() {
           bottom: 40,
           right: 30,
           backgroundColor: "#3ECF8E",
+          marginBottom: 10,
         }}
       >
         <AddIcon sx={{ fontSize: 32 }} />
       </Fab>
+
+      {/* 下部ナビバー（仮） */}
+      <Footer />
     </Box>
   );
 }

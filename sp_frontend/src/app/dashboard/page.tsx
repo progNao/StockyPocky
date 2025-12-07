@@ -7,10 +7,8 @@ import {
   Grid,
   IconButton,
   Stack,
-  Button,
   MenuItem,
   Menu,
-  Fab,
   CardMedia,
   CardContent,
   Snackbar,
@@ -19,16 +17,15 @@ import {
 import {
   ShoppingCart,
   Inventory2,
-  Description,
-  Home as HomeIcon,
   Settings,
-  Add,
 } from "@mui/icons-material";
 import {
   Category,
   DashboardData,
   Item,
   ItemListDisplay,
+  ShoppingList,
+  ShoppingListDisplay,
   Stock,
 } from "@/app/types";
 import { useRouter } from "next/navigation";
@@ -38,6 +35,7 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "@/stores/user";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LoadingScreen from "@/components/LoadingScreen";
+import FooterDashBoard from "@/components/FooterDashBoard";
 
 // モックデータ（後で API データに差し替え）
 const mockData: DashboardData = {
@@ -46,11 +44,6 @@ const mockData: DashboardData = {
     { id: "t1", title: "キッチンの掃除", done: true },
     { id: "t2", title: "トイレットペーパーを補充", done: false },
     { id: "t3", title: "週末の買い出し計画", done: false },
-  ],
-  lowStockItems: [],
-  recentShoppingLists: [
-    { id: "s1", name: "週末の買い出し", itemCount: 8 },
-    { id: "s2", name: "ドラッグストア", itemCount: 3 },
   ],
 };
 
@@ -70,6 +63,20 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [error, setError] = useState("");
+  const [shoppingList, setShoppingList] = useState<ShoppingListDisplay[]>([]);
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+
+    const yyyy = d.getFullYear();
+    const MM = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+
+    return `${yyyy}/${MM}/${dd} ${hh}:${mm}:${ss}`;
+  };
 
   const handleLogout = async () => {
     try {
@@ -130,7 +137,29 @@ export default function DashboardPage() {
     });
     return result.filter((item) =>
       isLowStock(item.stockQuantity, item.threshold)
-    );
+    ).slice(0, 3);
+  };
+
+  const mergeShoppingData = (
+    dataItems: Item[],
+    dataShopping: ShoppingList[]
+  ): ShoppingListDisplay[] => {
+    const itemMap = new Map(dataItems.map((i: Item) => [i.id, i]));
+    const result: ShoppingListDisplay[] = dataShopping.map((shopping) => {
+      const item = itemMap.get(shopping.item_id);
+      return {
+        id: shopping.id,
+        quantity: shopping.quantity,
+        checked: shopping.checked,
+        user_id: shopping.user_id,
+        item_id: shopping.item_id,
+        name: item ? item.name : "",
+        image_url: item ? item.image_url : "",
+        notes: item ? item.notes : "",
+        added_at: shopping.added_at,
+      };
+    });
+    return result.sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime()).slice(0, 3);
   };
 
   useEffect(() => {
@@ -148,10 +177,15 @@ export default function DashboardPage() {
         // 在庫一覧取得
         const resStocks = await api.get("/stocks");
         const dataStocks = resStocks.data.data;
+        // 買い物リスト取得
+        const resShopping = await api.get("/shopping-list");
+        const dataShopping = resShopping.data.data;
 
         // 表示アイテムの整形
         const mergeData = mergeItemData(dataItems, dataCategories, dataStocks);
         setLowStockItemList(mergeData);
+        const mergeShopping = mergeShoppingData(dataItems, dataShopping);
+        setShoppingList(mergeShopping);
       } catch (err) {
         setError("データ取得エラー：" + err);
         setOpenErrorSnackbar(true);
@@ -350,7 +384,6 @@ export default function DashboardPage() {
                   border: isLowStock(item.stockQuantity, item.threshold)
                     ? "3px solid #FBBF24"
                     : "none",
-                  cursor: "pointer",
                   minHeight: 70,
                 }}
               >
@@ -405,155 +438,95 @@ export default function DashboardPage() {
 
       {/* 最近の買い物リスト */}
       <Box sx={{ mb: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            最近の買い物リスト
-          </Typography>
-          <Button size="small">すべて表示</Button>
-        </Box>
-        <Grid container spacing={2}>
-          {data.recentShoppingLists.map((list) => (
-            <Grid size={{ xs: 6 }} key={list.id}>
-              <Card sx={{ borderRadius: 2, p: 2, backgroundColor: "#e9fff3" }}>
-                <Typography sx={{ fontWeight: 600 }}>{list.name}</Typography>
-                <Typography variant="body2">{list.itemCount}品</Typography>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          在庫不足のアイテム
+        </Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {shoppingList.length === 0 ? (
+            <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
+              買い物リストのアイテムはありません
+            </Typography>
+          ) : (
+            shoppingList.map((item) => (
+              <Card
+                key={item.id}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  borderRadius: "16px",
+                  padding: 1.5,
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
+                  minHeight: 70,
+                }}
+              >
+                {/* 画像 */}
+                <CardMedia
+                  component="img"
+                  image={item.image_url}
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: "10px",
+                    objectFit: "cover",
+                  }}
+                />
+
+                {/* 名称 + 購入数 */}
+                <CardContent
+                  sx={{
+                    flex: 1,
+                    padding: "8px 0 8px 12px",
+                    "&:last-child": { paddingBottom: "8px" },
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography
+                    sx={{ fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}
+                  >
+                    {item.name}
+                  </Typography>
+                  <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
+                    購入数：{item.quantity}
+                  </Typography>
+                  <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
+                    {formatDate(item.added_at)}
+                  </Typography>
+                </CardContent>
+
+                {/* メモ */}
+                <Box
+                  sx={{
+                    minWidth: 120,
+                    paddingLeft: 1,
+                    paddingRight: 1.5,
+                    display: "flex",
+                    alignItems: "center",
+                    border: item.notes ? "1px solid #00000020" : "",
+                    borderRadius: "6px",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: 12,
+                      color: "#555",
+                      whiteSpace: "pre-line",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {item.notes || ""}
+                  </Typography>
+                </Box>
               </Card>
-            </Grid>
-          ))}
-        </Grid>
+            ))
+          )}
+        </Box>
       </Box>
 
       {/* 下部ナビバー（仮） */}
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: "rgba(255,255,255,0.95)",
-          borderTopLeftRadius: "28px",
-          borderTopRightRadius: "28px",
-          boxShadow: "0 -6px 20px rgba(0,0,0,0.08)",
-          paddingTop: 2,
-          paddingBottom: 3,
-          zIndex: 1000,
-        }}
-      >
-        <Grid
-          container
-          justifyContent="space-around"
-          alignItems="center"
-          sx={{ position: "relative" }}
-        >
-          {/* ホーム */}
-          <Grid>
-            <Box
-              sx={{ textAlign: "center", cursor: "pointer" }}
-              onClick={() => router.push("/dashboard")}
-            >
-              <HomeIcon sx={{ color: "#32D26A", fontSize: 28 }} />
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#32D26A",
-                  mt: 0.5,
-                }}
-              >
-                ホーム
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* 在庫 */}
-          <Grid>
-            <Box
-              sx={{ textAlign: "center", cursor: "pointer" }}
-              onClick={() => router.push("/inventory")}
-            >
-              <Inventory2 sx={{ color: "#7A7A7A", fontSize: 28 }} />
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#7A7A7A",
-                  mt: 0.5,
-                }}
-              >
-                在庫
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* 中央の丸ボタン（デザイン完全一致） */}
-          <Grid>
-            <Fab
-              onClick={() => router.push("/item/new")}
-              sx={{
-                backgroundColor: "#32D26A",
-                color: "#FFFFFF",
-                width: 70,
-                height: 70,
-                position: "absolute",
-                left: "50%",
-                top: "-30px",
-                transform: "translateX(-50%)",
-                boxShadow: "0 8px 18px rgba(50,210,106,0.35)",
-                "&:hover": { backgroundColor: "#29C05F" },
-              }}
-            >
-              <Add sx={{ fontSize: 34 }} />
-            </Fab>
-          </Grid>
-
-          {/* リスト */}
-          <Grid>
-            <Box
-              sx={{ textAlign: "center", cursor: "pointer" }}
-              onClick={() => router.push("/shopping-list")}
-            >
-              <ShoppingCart sx={{ color: "#7A7A7A", fontSize: 28 }} />
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#7A7A7A",
-                  mt: 0.5,
-                }}
-              >
-                リスト
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* 分析 */}
-          <Grid>
-            <Box
-              sx={{ textAlign: "center", cursor: "pointer" }}
-              onClick={() => router.push("/analysis")}
-            >
-              <Description sx={{ color: "#7A7A7A", fontSize: 28 }} />
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#7A7A7A",
-                  mt: 0.5,
-                }}
-              >
-                メモ
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-      </Box>
+      <FooterDashBoard />
     </Box>
   );
 }

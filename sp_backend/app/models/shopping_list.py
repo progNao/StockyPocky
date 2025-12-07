@@ -1,4 +1,4 @@
-from sqlalchemy import UUID, BigInteger, Column, ForeignKey, Numeric, Boolean
+from sqlalchemy import UUID, BigInteger, Column, DateTime, ForeignKey, Numeric, Boolean, func
 from database import Base
 
 class ShoppingList(Base):
@@ -9,3 +9,4 @@ class ShoppingList(Base):
   checked = Column(Boolean, nullable=False)
   item_id = Column(BigInteger, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
   user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+  added_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

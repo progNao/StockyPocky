@@ -16,6 +16,7 @@ import { api } from "@/libs/api/client";
 import axios from "axios";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import Footer from "@/components/Footer";
 
 export default function StockHistoryPage({
   params,
@@ -183,6 +184,9 @@ export default function StockHistoryPage({
         );
       })}
       </Box>
+
+      {/* 下部ナビバー（仮） */}
+      <Footer />
     </Box>
   );
 }
