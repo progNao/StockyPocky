@@ -18,6 +18,10 @@ import AddIcon from "@mui/icons-material/Add";
 import { Item, ShoppingList, ShoppingListDisplay } from "../types";
 import { api } from "@/libs/api/client";
 import LoadingScreen from "@/components/LoadingScreen";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import DeleteIcon from "@mui/icons-material/Delete";
+import axios from "axios";
 
 export default function ShoppingListPage() {
   const router = useRouter();
@@ -27,6 +31,11 @@ export default function ShoppingListPage() {
     ShoppingListDisplay[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  // チェック状態を item.id ごとに管理
+  const [checkedItems, setCheckedItems] = useState<{ [key: number]: boolean }>(
+    {}
+  );
 
   const mergeItemData = (
     dataItems: Item[],
@@ -49,25 +58,89 @@ export default function ShoppingListPage() {
     return result;
   };
 
+  // チェック切り替え
+  const handleUpdate = async (id: number) => {
+    setLoading(true);
+
+    // 更新後の値を計算（ここが重要）
+    const newChecked = !checkedItems[id];
+
+    // UI の更新
+    setCheckedItems((prev) => ({
+      ...prev,
+      [id]: newChecked,
+    }));
+
+    try {
+      // 👈 PUT には newChecked を送る（最新値）
+      await api.put(`/shopping-list/${id}`, {
+        checked: newChecked,
+      });
+
+      setOpenSnackbar(true);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError("サーバーエラーが発生しました。");
+        setOpenErrorSnackbar(true);
+        return;
+      }
+      setError("ネットワークエラーが発生しました。");
+      setOpenErrorSnackbar(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      setLoading(true);
+
+      // APIへ削除リクエスト
+      await api.delete(`/shopping-list/${id}`);
+
+      // UI側から削除（再取得しないでOK）
+      setLowStockItemList((prev) => prev.filter((item) => item.id !== id));
+
+      setOpenSnackbar(true);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError("削除に失敗しました。");
+        setOpenErrorSnackbar(true);
+        return;
+      }
+      setError("ネットワークエラーが発生しました。");
+      setOpenErrorSnackbar(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        // 買い物リスト
+
         const resShopping = await api.get("/shopping-list");
         const dataShopping = resShopping.data.data;
-        // アイテム一覧取得
+
         const resItems = await api.get("/items");
         const dataItems = resItems.data.data;
 
-        // 表示アイテムの整形
         const mergeData = mergeItemData(dataItems, dataShopping);
+
+        // UI に表示
         setLowStockItemList(mergeData);
+
+        // 👉 checkedItems の初期値をセット
+        const initialChecked: { [key: number]: boolean } = {};
+        mergeData.forEach((item) => {
+          initialChecked[item.id] = item.checked; // API 値そのまま反映
+        });
+        setCheckedItems(initialChecked);
       } catch (err) {
         setError("データ取得エラー：" + err);
         setOpenErrorSnackbar(true);
       } finally {
-        // 全て整形し終わってからロード解除
         setLoading(false);
       }
     };
@@ -121,6 +194,16 @@ export default function ShoppingListPage() {
       </Box>
 
       <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenSnackbar(false)}
+      >
+        <Alert severity="success" sx={{ width: "100%" }}>
+          更新しました
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
         open={openErrorSnackbar}
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
@@ -147,7 +230,6 @@ export default function ShoppingListPage() {
                 padding: 1.5,
                 backgroundColor: "#FFFFFF",
                 boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
-                cursor: "pointer",
                 minHeight: 70,
               }}
             >
@@ -156,14 +238,14 @@ export default function ShoppingListPage() {
                 component="img"
                 image={item.image_url}
                 sx={{
-                  width: 60,
-                  height: 60,
+                  width: 40,
+                  height: 40,
                   borderRadius: "10px",
                   objectFit: "cover",
                 }}
               />
 
-              {/* 左カラム：名称 & 数量 */}
+              {/* 名称 + 購入数 */}
               <CardContent
                 sx={{
                   flex: 1,
@@ -179,21 +261,21 @@ export default function ShoppingListPage() {
                 >
                   {item.name}
                 </Typography>
-
                 <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
                   購入数：{item.quantity}
                 </Typography>
               </CardContent>
 
-              {/* 右カラム：メモ */}
+              {/* メモ */}
               <Box
                 sx={{
-                  minWidth: 120, // 必要なら調整
+                  minWidth: 120,
                   paddingLeft: 1,
                   paddingRight: 1.5,
                   display: "flex",
                   alignItems: "center",
-                  border: item.notes ? "1px solid #000000" : "",
+                  border: item.notes ? "1px solid #00000020" : "",
+                  borderRadius: "6px",
                 }}
               >
                 <Typography
@@ -206,6 +288,39 @@ export default function ShoppingListPage() {
                 >
                   {item.notes || ""}
                 </Typography>
+              </Box>
+
+              {/* 右側：チェック（上）＋ 削除（下） */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  marginLeft: 1,
+                  justifyContent: "space-between",
+                  height: "60px",
+                }}
+              >
+                {/* ✔ チェック */}
+                <IconButton
+                  onClick={() => handleUpdate(item.id)}
+                  sx={{
+                    color: checkedItems[item.id] ? "#32D26A" : "#B7B7B7",
+                  }}
+                >
+                  {checkedItems[item.id] ? (
+                    <CheckBoxIcon />
+                  ) : (
+                    <CheckBoxOutlineBlankIcon />
+                  )}
+                </IconButton>
+
+                {/* 🗑 削除 */}
+                <IconButton
+                  onClick={() => handleDelete(item.id)}
+                  sx={{ color: "#D9534F" }}
+                >
+                  <DeleteIcon />
+                </IconButton>
               </Box>
             </Card>
           ))
