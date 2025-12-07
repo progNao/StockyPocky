@@ -11,6 +11,10 @@ import {
   MenuItem,
   Menu,
   Fab,
+  CardMedia,
+  CardContent,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   ShoppingCart,
@@ -20,14 +24,20 @@ import {
   Settings,
   Add,
 } from "@mui/icons-material";
-import { DashboardData } from "@/app/types";
-import Image from "next/image";
+import {
+  Category,
+  DashboardData,
+  Item,
+  ItemListDisplay,
+  Stock,
+} from "@/app/types";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth";
 import { api } from "@/libs/api/client";
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/stores/user";
-import ListAltIcon from '@mui/icons-material/ListAlt';
+import ListAltIcon from "@mui/icons-material/ListAlt";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // モックデータ（後で API データに差し替え）
 const mockData: DashboardData = {
@@ -37,10 +47,7 @@ const mockData: DashboardData = {
     { id: "t2", title: "トイレットペーパーを補充", done: false },
     { id: "t3", title: "週末の買い出し計画", done: false },
   ],
-  lowStockItems: [
-    { id: "i1", name: "牛乳", remaining: 1, imageUrl: "/images/milk.jpg" },
-    { id: "i2", name: "たまご", remaining: 2, imageUrl: "/images/eggs.jpg" },
-  ],
+  lowStockItems: [],
   recentShoppingLists: [
     { id: "s1", name: "週末の買い出し", itemCount: 8 },
     { id: "s2", name: "ドラッグストア", itemCount: 3 },
@@ -56,10 +63,13 @@ export default function DashboardPage() {
   const { clearUser } = useUserStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-
-  useEffect(() => {
-    setDisplayName(username);
-  }, [username]);
+  const [lowStockItemList, setLowStockItemList] = useState<ItemListDisplay[]>(
+    []
+  );
+  const [, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogout = async () => {
     try {
@@ -76,6 +86,13 @@ export default function DashboardPage() {
     }
   };
 
+  const isLowStock = (stock: number, threshold: number) => {
+    const ratio = stock / threshold;
+    if (ratio <= 0.2) return true;
+
+    return false;
+  };
+
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -87,6 +104,67 @@ export default function DashboardPage() {
   const handleCategory = () => {
     router.push("/category");
   };
+
+  const mergeItemData = (
+    dataItems: Item[],
+    dataCategories: Category[],
+    dataStocks: Stock[]
+  ): ItemListDisplay[] => {
+    const categoryMap = new Map(
+      dataCategories.map((c: Category) => [c.id, c.name])
+    );
+    const stockMap = new Map(dataStocks.map((s: Stock) => [s.item_id, s]));
+    const result: ItemListDisplay[] = dataItems.map((item) => {
+      const stock = stockMap.get(item.id);
+      return {
+        id: item.id,
+        name: item.name,
+        categoryId: item.category_id,
+        categoryName: categoryMap.get(item.category_id) ?? "未分類",
+        stockQuantity: stock ? stock.quantity : 0,
+        isFavorite: item.is_favorite,
+        threshold: stock ? stock.threshold : 0,
+        imageUrl: item.image_url,
+        location: stock ? stock.location : "",
+      };
+    });
+    return result.filter((item) =>
+      isLowStock(item.stockQuantity, item.threshold)
+    );
+  };
+
+  useEffect(() => {
+    setDisplayName(username);
+    const fetchAll = async () => {
+      try {
+        setLoading(true);
+        // アイテム一覧取得
+        const resItems = await api.get("/items");
+        const dataItems = resItems.data.data;
+        // カテゴリ一覧取得
+        const resCategories = await api.get("/categories");
+        const dataCategories = resCategories.data.data;
+        setCategories(dataCategories);
+        // 在庫一覧取得
+        const resStocks = await api.get("/stocks");
+        const dataStocks = resStocks.data.data;
+
+        // 表示アイテムの整形
+        const mergeData = mergeItemData(dataItems, dataCategories, dataStocks);
+        setLowStockItemList(mergeData);
+      } catch (err) {
+        setError("データ取得エラー：" + err);
+        setOpenErrorSnackbar(true);
+      } finally {
+        // 全て整形し終わってからロード解除
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
+  }, [username]);
+
+  if (loading) return <LoadingScreen />;
 
   return (
     <Box
@@ -127,6 +205,16 @@ export default function DashboardPage() {
         <MenuItem onClick={handleCategory}>カテゴリ一覧</MenuItem>
       </Menu>
 
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
+
       {/* メインメニューカード */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid size={{ xs: 4 }} textAlign="center">
@@ -158,7 +246,6 @@ export default function DashboardPage() {
         <Grid size={{ xs: 4 }}>
           <Card sx={{ borderRadius: 2, p: 2, textAlign: "center" }}>
             <Box
-              
               sx={{
                 display: "flex",
                 justifyContent: "center",
@@ -242,47 +329,73 @@ export default function DashboardPage() {
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
           在庫不足のアイテム
         </Typography>
-        <Stack spacing={2}>
-          {data.lowStockItems.map((item) => (
-            <Card
-              key={item.id}
-              sx={{
-                borderRadius: 2,
-                display: "flex",
-                alignItems: "center",
-                p: 1,
-              }}
-            >
-              <Box
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {lowStockItemList.length === 0 ? (
+            <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
+              在庫不足のアイテムはありません
+            </Typography>
+          ) : (
+            lowStockItemList.map((item) => (
+              <Card
+                key={item.id}
                 sx={{
-                  width: 64,
-                  height: 64,
-                  position: "relative",
-                  borderRadius: 1,
-                  overflow: "hidden",
-                  mr: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  borderRadius: "16px",
+                  padding: 1.5,
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
+                  border: isLowStock(item.stockQuantity, item.threshold)
+                    ? "3px solid #FBBF24"
+                    : "none",
+                  cursor: "pointer",
+                  minHeight: 70,
                 }}
               >
-                <Image
-                  src={item.imageUrl}
-                  alt={item.name}
-                  fill
-                  style={{ objectFit: "cover" }}
+                <CardMedia
+                  component="img"
+                  image={item.imageUrl}
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: "10px",
+                    objectFit: "cover",
+                  }}
                 />
-              </Box>
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography sx={{ fontWeight: 600 }}>{item.name}</Typography>
-                <Typography variant="body2">
-                  残り {item.remaining}
-                  {item.remaining > 1 ? "個" : "本"}
-                </Typography>
-              </Box>
-              <IconButton sx={{ color: "#32D26A" }}>
-                <ShoppingCart />
-              </IconButton>
-            </Card>
-          ))}
-        </Stack>
+
+                <CardContent
+                  sx={{
+                    flex: 1,
+                    padding: "8px 0 8px 12px",
+                    "&:last-child": { paddingBottom: "8px" },
+                  }}
+                >
+                  <Typography
+                    sx={{ fontSize: 12, color: "#4A9160", lineHeight: 1.2 }}
+                  >
+                    {item.categoryName}
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}
+                  >
+                    {item.name}
+                  </Typography>
+
+                  <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
+                    在庫数：{item.stockQuantity}
+                    {isLowStock(item.stockQuantity, item.threshold) && (
+                      <span style={{ color: "#D97706", fontWeight: "bold" }}>
+                        （残りわずか）
+                      </span>
+                    )}
+                  </Typography>
+                </CardContent>
+
+                {/* 買い物リストに追加 */}
+              </Card>
+            ))
+          )}
+        </Box>
       </Box>
 
       {/* 最近の買い物リスト */}

@@ -46,12 +46,19 @@ export default function ItemsPage() {
   .filter((item) => {
     if (filter === "all") return true;
     if (filter === "favorite") return item.isFavorite === true;
-    if (filter === "low") return item.stockQuantity < item.threshold;
+    if (filter === "low") return isLowStock(item.stockQuantity, item.threshold);
     if (filter === "category") {
       if (!selectedCategoryName) return true; // カテゴリ未選択なら全て表示
       return item.categoryName === selectedCategoryName;
     }
     return true;
+  });
+
+  const isLowStock = ((stock: number, threshold: number) => {
+    const ratio = stock / threshold;
+    if (ratio <= 0.2) return true;
+
+    return false;
   });
 
   const mergeItemData = (
@@ -272,7 +279,7 @@ export default function ItemsPage() {
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {filteredItems.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
-            一致するカテゴリがありません
+            一致するアイテムがありません
           </Typography>
         ) : (
           filteredItems.map((item) => (
@@ -290,7 +297,7 @@ export default function ItemsPage() {
                 backgroundColor: "#FFFFFF",
                 boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
                 border:
-                  item.stockQuantity < item.threshold
+                  isLowStock(item.stockQuantity, item.threshold)
                     ? "3px solid #FBBF24"
                     : "none",
                 cursor: "pointer",
@@ -317,7 +324,7 @@ export default function ItemsPage() {
 
                 <Typography sx={{ fontSize: 14 }}>
                   在庫数：{item.stockQuantity}
-                  {item.stockQuantity < item.threshold && (
+                  {isLowStock(item.stockQuantity, item.threshold) && (
                     <span style={{ color: "#D97706", fontWeight: "bold" }}>
                       （残りわずか）
                     </span>
