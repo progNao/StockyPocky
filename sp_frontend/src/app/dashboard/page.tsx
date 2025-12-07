@@ -392,6 +392,9 @@ export default function DashboardPage() {
                 </CardContent>
 
                 {/* 買い物リストに追加 */}
+                <IconButton sx={{ color: "#32D26A" }}>
+                  <ShoppingCart />
+                </IconButton>
               </Card>
             ))
           )}
