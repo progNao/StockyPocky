@@ -25,9 +25,11 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { Category, Item, ItemListDisplay, Stock } from "../types";
 import { api } from "@/libs/api/client";
 import LoadingScreen from "@/components/LoadingScreen";
-import CategoryIcon2 from '@mui/icons-material/Category';
+import CategoryIcon2 from "@mui/icons-material/Category";
 import { useItemStore } from "@/stores/item";
 import Footer from "@/components/Footer";
+import PriceCheckIcon from "@mui/icons-material/PriceCheck";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 export default function ItemsPage() {
   const router = useRouter();
@@ -38,29 +40,31 @@ export default function ItemsPage() {
   const [loading, setLoading] = useState(true);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [error, setError] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null
+  );
   const [selectedCategoryName, setSelectedCategoryName] = useState("");
 
-  const filteredItems = itemList.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  )
-  .filter((item) => {
-    if (filter === "all") return true;
-    if (filter === "favorite") return item.isFavorite === true;
-    if (filter === "low") return isLowStock(item.stockQuantity, item.threshold);
-    if (filter === "category") {
-      if (!selectedCategoryName) return true; // カテゴリ未選択なら全て表示
-      return item.categoryName === selectedCategoryName;
-    }
-    return true;
-  });
+  const filteredItems = itemList
+    .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
+    .filter((item) => {
+      if (filter === "all") return true;
+      if (filter === "favorite") return item.isFavorite === true;
+      if (filter === "low")
+        return isLowStock(item.stockQuantity, item.threshold);
+      if (filter === "category") {
+        if (!selectedCategoryName) return true; // カテゴリ未選択なら全て表示
+        return item.categoryName === selectedCategoryName;
+      }
+      return true;
+    });
 
-  const isLowStock = ((stock: number, threshold: number) => {
+  const isLowStock = (stock: number, threshold: number) => {
     const ratio = stock / threshold;
     if (ratio <= 0.2) return true;
 
     return false;
-  });
+  };
 
   const mergeItemData = (
     dataItems: Item[],
@@ -201,14 +205,18 @@ export default function ItemsPage() {
           <Chip
             icon={
               <CategoryIcon2
-                sx={{ color: selectedCategoryId === cat.id ? "white" : "#32D26A" }}
+                sx={{
+                  color: selectedCategoryId === cat.id ? "white" : "#32D26A",
+                }}
               />
             }
             key={cat.id}
             label={cat.name}
             onClick={() => {
               setFilter(selectedCategoryId === cat.id ? "all" : "category");
-              setSelectedCategoryId(selectedCategoryId === cat.id ? null : cat.id);
+              setSelectedCategoryId(
+                selectedCategoryId === cat.id ? null : cat.id
+              );
               setSelectedCategoryName(cat.name);
             }}
             sx={{
@@ -217,7 +225,8 @@ export default function ItemsPage() {
               fontWeight: 700,
               borderRadius: "18px",
               paddingX: 1,
-              backgroundColor: selectedCategoryId === cat.id ? "#32D26A" : "#ffffff",
+              backgroundColor:
+                selectedCategoryId === cat.id ? "#32D26A" : "#ffffff",
               color: selectedCategoryId === cat.id ? "white" : "#333",
               boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
               "& .MuiChip-icon": {
@@ -277,7 +286,14 @@ export default function ItemsPage() {
       </Box>
 
       {/* アイテムリスト */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 20, }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          marginBottom: 20,
+        }}
+      >
         {filteredItems.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
             一致するアイテムがありません
@@ -286,10 +302,6 @@ export default function ItemsPage() {
           filteredItems.map((item) => (
             <Card
               key={item.id}
-              onClick={() => {
-                useItemStore.getState().setSelectedItem(item);
-                router.push(`/item/${item.id}`);
-              }}
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -297,10 +309,9 @@ export default function ItemsPage() {
                 padding: 2,
                 backgroundColor: "#FFFFFF",
                 boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
-                border:
-                  isLowStock(item.stockQuantity, item.threshold)
-                    ? "3px solid #FBBF24"
-                    : "none",
+                border: isLowStock(item.stockQuantity, item.threshold)
+                  ? "3px solid #FBBF24"
+                  : "none",
                 cursor: "pointer",
               }}
             >
@@ -334,12 +345,30 @@ export default function ItemsPage() {
               </CardContent>
 
               {/* お気に入り */}
-              <IconButton sx={{ marginRight: 1 }}>
+              <IconButton>
                 {item.isFavorite ? (
                   <FavoriteIcon sx={{ color: "pink" }} />
                 ) : (
                   <FavoriteBorderIcon sx={{ color: "#B7B7B7" }} />
                 )}
+              </IconButton>
+
+              {/* 購入 */}
+              <IconButton
+                onClick={() => router.push(`/shopping-record/buy/${item.id}`)}
+              >
+                <PriceCheckIcon sx={{ color: "blue" }} />
+              </IconButton>
+
+              {/* 詳細画面 */}
+              <IconButton
+                onClick={() => {
+                useItemStore.getState().setSelectedItem(item);
+                router.push(`/item/${item.id}`);
+              }}
+                sx={{ color: "#B7B7B7" }}
+              >
+                <ArrowForwardIosIcon />
               </IconButton>
             </Card>
           ))

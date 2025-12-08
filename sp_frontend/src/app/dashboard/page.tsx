@@ -425,11 +425,6 @@ export default function DashboardPage() {
                     )}
                   </Typography>
                 </CardContent>
-
-                {/* 買い物リストに追加 */}
-                <IconButton sx={{ color: "#32D26A" }}>
-                  <ShoppingCart />
-                </IconButton>
               </Card>
             ))
           )}
@@ -439,7 +434,7 @@ export default function DashboardPage() {
       {/* 最近の買い物リスト */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-          在庫不足のアイテム
+          最近の買い物リスト
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {shoppingList.length === 0 ? (

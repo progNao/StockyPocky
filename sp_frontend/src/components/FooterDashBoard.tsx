@@ -1,15 +1,19 @@
 import {
-  Inventory2,
   Add,
   ShoppingCart,
   Description,
   Home,
 } from "@mui/icons-material";
 import { Box, Grid, Typography, Fab } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 
 export default function FooterDashBoard() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isActive = (path: string) => pathname === path;
+
   return (
     <Box
       sx={{
@@ -38,12 +42,17 @@ export default function FooterDashBoard() {
             sx={{ textAlign: "center", cursor: "pointer" }}
             onClick={() => router.push("/dashboard")}
           >
-            <Home sx={{ color: "#32D26A", fontSize: 28 }} />
+            <Home
+              sx={{
+                color: isActive("/dashboard") ? "#32D26A" : "#7A7A7A",
+                fontSize: 28,
+              }}
+            />
             <Typography
               sx={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#32D26A",
+                color: isActive("/dashboard") ? "#32D26A" : "#7A7A7A",
                 mt: 0.5,
               }}
             >
@@ -56,23 +65,28 @@ export default function FooterDashBoard() {
         <Grid>
           <Box
             sx={{ textAlign: "center", cursor: "pointer" }}
-            onClick={() => router.push("/inventory")}
+            onClick={() => router.push("/item")}
           >
-            <Inventory2 sx={{ color: "#7A7A7A", fontSize: 28 }} />
+            <ListAltIcon
+              sx={{
+                color: isActive("/item") ? "#32D26A" : "#7A7A7A",
+                fontSize: 28,
+              }}
+            />
             <Typography
               sx={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#7A7A7A",
+                color: isActive("/item") ? "#32D26A" : "#7A7A7A",
                 mt: 0.5,
               }}
             >
-              在庫
+              アイテム
             </Typography>
           </Box>
         </Grid>
 
-        {/* 中央の丸ボタン（デザイン完全一致） */}
+        {/* 中央の丸ボタン */}
         <Grid>
           <Fab
             onClick={() => router.push("/item/new")}
@@ -99,12 +113,17 @@ export default function FooterDashBoard() {
             sx={{ textAlign: "center", cursor: "pointer" }}
             onClick={() => router.push("/shopping-list")}
           >
-            <ShoppingCart sx={{ color: "#7A7A7A", fontSize: 28 }} />
+            <ShoppingCart
+              sx={{
+                color: isActive("/shopping-list") ? "#32D26A" : "#7A7A7A",
+                fontSize: 28,
+              }}
+            />
             <Typography
               sx={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#7A7A7A",
+                color: isActive("/shopping-list") ? "#32D26A" : "#7A7A7A",
                 mt: 0.5,
               }}
             >
@@ -119,12 +138,17 @@ export default function FooterDashBoard() {
             sx={{ textAlign: "center", cursor: "pointer" }}
             onClick={() => router.push("/analysis")}
           >
-            <Description sx={{ color: "#7A7A7A", fontSize: 28 }} />
+            <Description
+              sx={{
+                color: isActive("/analysis") ? "#32D26A" : "#7A7A7A",
+                fontSize: 28,
+              }}
+            />
             <Typography
               sx={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#7A7A7A",
+                color: isActive("/analysis") ? "#32D26A" : "#7A7A7A",
                 mt: 0.5,
               }}
             >
