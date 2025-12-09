@@ -35,6 +35,7 @@ export default function ItemBuyPage({
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState<number | null>(null);
   const [store, setStore] = useState("");
+  const [boughtAt, setBoughtAt] = useState("");
   const unwrapParams = use(params);
   const [item, setItem] = useState<Item>();
   const [error, setError] = useState("");
@@ -64,6 +65,12 @@ export default function ItemBuyPage({
     setStore("");
   };
 
+  function toISOStringWithZ(datetimeLocal: string) {
+    if (!datetimeLocal) return null;
+    const date = new Date(datetimeLocal);
+    return date.toISOString();
+  }
+
   const handleBuy = async () => {
     const validationError = validate();
     if (validationError) {
@@ -78,7 +85,7 @@ export default function ItemBuyPage({
         quantity,
         price,
         store,
-        bought_at: "2025-12-08T14:17:52.941Z",
+        bought_at: toISOStringWithZ(boughtAt),
       });
       setOpenSnackbar(true);
       clear();
@@ -290,6 +297,24 @@ export default function ItemBuyPage({
             placeholder="例: Amazon、ドラッグストア"
             value={store}
             onChange={(e) => setStore(e.target.value)}
+          />
+        </Box>
+
+        <Divider />
+
+        {/* 購入日時 */}
+        <Box sx={{ mt: 2, mb: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+            <StoreIcon sx={{ mr: 1 }} />
+            <Typography sx={{ fontSize: 16 }}>購入日時</Typography>
+          </Box>
+
+          <TextField
+            type="datetime-local"
+            fullWidth
+            placeholder="例: 2025/12/12 13:00"
+            value={boughtAt}
+            onChange={(e) => setBoughtAt(e.target.value)}
           />
         </Box>
 

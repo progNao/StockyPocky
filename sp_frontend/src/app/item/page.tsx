@@ -327,19 +327,25 @@ export default function ItemsPage() {
               />
 
               <CardContent sx={{ flex: 1 }}>
-                <Typography sx={{ fontSize: 13, color: "#4A9160" }}>
+                <Typography sx={{ fontSize: 9, color: "#4A9160" }}>
                   {item.categoryName}
                 </Typography>
-                <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
+                <Typography sx={{ fontSize: 10, fontWeight: 700 }}>
                   {item.name}
                 </Typography>
 
-                <Typography sx={{ fontSize: 14 }}>
+                <Typography sx={{ fontSize: 12 }}>
                   在庫数：{item.stockQuantity}
                   {isLowStock(item.stockQuantity, item.threshold) && (
-                    <span style={{ color: "#D97706", fontWeight: "bold" }}>
+                    <p
+                      style={{
+                        color: "#D97706",
+                        fontWeight: "bold",
+                        fontSize: 7,
+                      }}
+                    >
                       （残りわずか）
-                    </span>
+                    </p>
                   )}
                 </Typography>
               </CardContent>
@@ -347,9 +353,12 @@ export default function ItemsPage() {
               {/* お気に入り */}
               <IconButton>
                 {item.isFavorite ? (
-                  <FavoriteIcon sx={{ color: "pink" }} />
+                  <FavoriteIcon sx={{ color: "pink" }} fontSize="small" />
                 ) : (
-                  <FavoriteBorderIcon sx={{ color: "#B7B7B7" }} />
+                  <FavoriteBorderIcon
+                    sx={{ color: "#B7B7B7" }}
+                    fontSize="small"
+                  />
                 )}
               </IconButton>
 
@@ -357,18 +366,18 @@ export default function ItemsPage() {
               <IconButton
                 onClick={() => router.push(`/shopping-record/buy/${item.id}`)}
               >
-                <PriceCheckIcon sx={{ color: "blue" }} />
+                <PriceCheckIcon sx={{ color: "blue" }} fontSize="small" />
               </IconButton>
 
               {/* 詳細画面 */}
               <IconButton
                 onClick={() => {
-                useItemStore.getState().setSelectedItem(item);
-                router.push(`/item/${item.id}`);
-              }}
+                  useItemStore.getState().setSelectedItem(item);
+                  router.push(`/item/${item.id}`);
+                }}
                 sx={{ color: "#B7B7B7" }}
               >
-                <ArrowForwardIosIcon />
+                <ArrowForwardIosIcon fontSize="small" />
               </IconButton>
             </Card>
           ))

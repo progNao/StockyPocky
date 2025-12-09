@@ -1,9 +1,4 @@
-import {
-  ShoppingCart,
-  Description,
-  Home,
-  Settings,
-} from "@mui/icons-material";
+import { ShoppingCart, Description, Home, Settings } from "@mui/icons-material";
 import { Box, Grid, Typography } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
 import ListAltIcon from "@mui/icons-material/ListAlt";
@@ -81,6 +76,31 @@ export default function Footer() {
           </Box>
         </Grid>
 
+        {/* 設定 */}
+        <Grid>
+          <Box
+            sx={{ textAlign: "center", cursor: "pointer" }}
+            onClick={() => router.push("/settings")}
+          >
+            <Settings
+              sx={{
+                color: isActive("/settings") ? "#32D26A" : "#7A7A7A",
+                fontSize: 28,
+              }}
+            />
+            <Typography
+              sx={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: isActive("/settings") ? "#32D26A" : "#7A7A7A",
+                mt: 0.5,
+              }}
+            >
+              設定
+            </Typography>
+          </Box>
+        </Grid>
+
         {/* リスト */}
         <Grid>
           <Box
@@ -127,31 +147,6 @@ export default function Footer() {
               }}
             >
               メモ
-            </Typography>
-          </Box>
-        </Grid>
-
-        {/* 設定 */}
-        <Grid>
-          <Box
-            sx={{ textAlign: "center", cursor: "pointer" }}
-            onClick={() => router.push("/settings")}
-          >
-            <Settings
-              sx={{
-                color: isActive("/settings") ? "#32D26A" : "#7A7A7A",
-                fontSize: 28,
-              }}
-            />
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: isActive("/settings") ? "#32D26A" : "#7A7A7A",
-                mt: 0.5,
-              }}
-            >
-              設定
             </Typography>
           </Box>
         </Grid>

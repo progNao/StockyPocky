@@ -51,9 +51,7 @@ export default function StockHistoryPage({
           await api.get(`/items/${unwrapParams.id}/stock-history`)
         ).data.data;
         setStockHistory(stockH);
-        const Item = (
-          await api.get(`/items/${unwrapParams.id}`)
-        ).data.data;
+        const Item = (await api.get(`/items/${unwrapParams.id}`)).data.data;
         setItemName(Item.name);
       } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
@@ -122,67 +120,67 @@ export default function StockHistoryPage({
         </Alert>
       </Snackbar>
 
-      <Box sx={{ px: 3, mt: 4 }}>
+      <Box sx={{ px: 3, mt: 4, marginBottom: 10 }}>
         {stockHistory.map((h) => {
-        const isIncrease = h.change > 0;
+          const isIncrease = h.change > 0;
 
-        return (
-          <Card
-            key={h.id}
-            sx={{
-              p: 2,
-              mb: 2,
-              borderRadius: "22px",
-              display: "flex",
-              alignItems: "center",
-              backgroundColor: "#F8FFF8",
-              boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
-            }}
-          >
-            {/* 丸背景アイコン */}
-            <Box
+          return (
+            <Card
+              key={h.id}
               sx={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                backgroundColor: isIncrease ? "#E6F8EE" : "#FFECEC",
+                p: 2,
+                mb: 2,
+                borderRadius: "22px",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                backgroundColor: "#F8FFF8",
+                boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
               }}
             >
-              {isIncrease ? (
-                <AddIcon sx={{ fontSize: 28, color: "#4CAF50" }} />
-              ) : (
-                <RemoveIcon sx={{ fontSize: 28, color: "#F44336" }} />
-              )}
-            </Box>
-
-            {/* テキスト部分 */}
-            <Box sx={{ ml: 2, flex: 1 }}>
-              <Typography fontSize="13px" fontWeight="bold">
-                {h.reason}
-              </Typography>
-            </Box>
-
-            {/* 右側：change & 日付 */}
-            <Box sx={{ textAlign: "right" }}>
-              <Typography
-                fontSize="20px"
-                fontWeight="bold"
-                color={isIncrease ? "#4CAF50" : "#F44336"}
-                sx={{ mb: 0.5 }}
+              {/* 丸背景アイコン */}
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  backgroundColor: isIncrease ? "#E6F8EE" : "#FFECEC",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                {isIncrease ? `+${h.change}` : h.change}
-              </Typography>
+                {isIncrease ? (
+                  <AddIcon sx={{ fontSize: 28, color: "#4CAF50" }} />
+                ) : (
+                  <RemoveIcon sx={{ fontSize: 28, color: "#F44336" }} />
+                )}
+              </Box>
 
-              <Typography fontSize="12px" color="gray">
-                {formatDate(h.created_at)}
-              </Typography>
-            </Box>
-          </Card>
-        );
-      })}
+              {/* テキスト部分 */}
+              <Box sx={{ ml: 2, flex: 1 }}>
+                <Typography fontSize="13px" fontWeight="bold">
+                  {h.reason}
+                </Typography>
+              </Box>
+
+              {/* 右側：change & 日付 */}
+              <Box sx={{ textAlign: "right" }}>
+                <Typography
+                  fontSize="20px"
+                  fontWeight="bold"
+                  color={isIncrease ? "#4CAF50" : "#F44336"}
+                  sx={{ mb: 0.5 }}
+                >
+                  {isIncrease ? `+${h.change}` : h.change}
+                </Typography>
+
+                <Typography fontSize="12px" color="gray">
+                  {formatDate(h.created_at)}
+                </Typography>
+              </Box>
+            </Card>
+          );
+        })}
       </Box>
 
       {/* 下部ナビバー（仮） */}

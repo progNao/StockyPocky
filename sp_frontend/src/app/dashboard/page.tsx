@@ -14,11 +14,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import {
-  ShoppingCart,
-  Inventory2,
-  Settings,
-} from "@mui/icons-material";
+import { ShoppingCart, Settings } from "@mui/icons-material";
 import {
   Category,
   DashboardData,
@@ -36,6 +32,7 @@ import { useUserStore } from "@/stores/user";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LoadingScreen from "@/components/LoadingScreen";
 import FooterDashBoard from "@/components/FooterDashBoard";
+import HistoryIcon from "@mui/icons-material/History";
 
 // モックデータ（後で API データに差し替え）
 const mockData: DashboardData = {
@@ -135,9 +132,9 @@ export default function DashboardPage() {
         location: stock ? stock.location : "",
       };
     });
-    return result.filter((item) =>
-      isLowStock(item.stockQuantity, item.threshold)
-    ).slice(0, 3);
+    return result
+      .filter((item) => isLowStock(item.stockQuantity, item.threshold))
+      .slice(0, 3);
   };
 
   const mergeShoppingData = (
@@ -159,7 +156,12 @@ export default function DashboardPage() {
         added_at: shopping.added_at,
       };
     });
-    return result.sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime()).slice(0, 3);
+    return result
+      .sort(
+        (a, b) =>
+          new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
+      )
+      .slice(0, 3);
   };
 
   useEffect(() => {
@@ -261,6 +263,7 @@ export default function DashboardPage() {
               }}
             >
               <Box
+                onClick={() => router.push("/shopping-record")}
                 sx={{
                   width: 52,
                   height: 52,
@@ -269,12 +272,13 @@ export default function DashboardPage() {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  cursor: "pointer",
                 }}
               >
-                <Inventory2 fontSize="large" sx={{ color: "#32D26A" }} />
+                <HistoryIcon fontSize="large" sx={{ color: "#32D26A" }} />
               </Box>
             </Box>
-            <Typography sx={{ mt: 1, fontSize: 10 }}>在庫</Typography>
+            <Typography sx={{ mt: 1, fontSize: 10 }}>購入履歴</Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 4 }}>

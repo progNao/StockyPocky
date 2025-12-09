@@ -5,6 +5,11 @@ export interface Task {
   done: boolean;
 }
 
+export interface DashboardData {
+  userName: string;
+  tasks: Task[];
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -77,7 +82,22 @@ export interface ShoppingListDisplay {
   added_at: string;
 }
 
-export interface DashboardData {
-  userName: string;
-  tasks: Task[];
+export interface ShoppingRecord {
+  id: number;
+  item_id: number;
+  quantity: number;
+  price: number;
+  store: string;
+  bought_at: string;
+  user_id: string;
+}
+
+export interface ShoppingRecordDisplay {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+  store: string;
+  image_url: string;
+  bought_at: string;
 }
