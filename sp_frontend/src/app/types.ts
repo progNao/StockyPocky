@@ -101,3 +101,13 @@ export interface ShoppingRecordDisplay {
   image_url: string;
   bought_at: string;
 }
+
+export interface Memo {
+  id: number;
+  title: string;
+  content: string;
+  type: string;
+  is_done: boolean;
+  tags: [];
+  user_id: string;
+}

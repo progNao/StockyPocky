@@ -105,10 +105,6 @@ export default function DashboardPage() {
     setAnchorEl(null);
   };
 
-  const handleCategory = () => {
-    router.push("/category");
-  };
-
   const mergeItemData = (
     dataItems: Item[],
     dataCategories: Category[],
@@ -238,7 +234,8 @@ export default function DashboardPage() {
 
       <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
         <MenuItem onClick={handleLogout}>ログアウト</MenuItem>
-        <MenuItem onClick={handleCategory}>カテゴリ一覧</MenuItem>
+        <MenuItem onClick={() => router.push("/category")}>カテゴリ一覧</MenuItem>
+        <MenuItem onClick={() => router.push("/memo")}>メモ一覧</MenuItem>
       </Menu>
 
       <Snackbar
