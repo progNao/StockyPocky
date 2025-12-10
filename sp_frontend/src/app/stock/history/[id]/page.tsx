@@ -30,6 +30,10 @@ export default function StockHistoryPage({
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [itemName, setItemName] = useState("");
 
+  const sortedItems = [...stockHistory].sort((a, b) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
   const formatDate = (iso: string) => {
     const d = new Date(iso);
 
@@ -121,7 +125,7 @@ export default function StockHistoryPage({
       </Snackbar>
 
       <Box sx={{ px: 3, mt: 4, marginBottom: 10 }}>
-        {stockHistory.map((h) => {
+        {sortedItems.map((h) => {
           const isIncrease = h.change > 0;
 
           return (

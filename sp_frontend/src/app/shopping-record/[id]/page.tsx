@@ -17,8 +17,9 @@ import { useShoppingRecordStoreStore } from "@/stores/shoppingRecord";
 import { api } from "@/libs/api/client";
 import { ShoppingRecord, Item, ShoppingRecordDisplay } from "@/app/types";
 import axios from "axios";
+import EditIcon from "@mui/icons-material/Edit";
 
-export default function PurchaseHistoryDetailPage({
+export default function ShoppingRecordDetail({
   params,
 }: {
   params: Promise<{ id: number }>;
@@ -88,6 +89,8 @@ export default function PurchaseHistoryDetailPage({
     }
   }, [shoppingRecord, unwrapParams.id]);
 
+  if (!shoppingRecord) return;
+
   return (
     <Box
       sx={{
@@ -127,6 +130,18 @@ export default function PurchaseHistoryDetailPage({
         >
           購入履歴詳細
         </Typography>
+
+        {/* 更新画面 */}
+        <IconButton
+          onClick={() => {
+            useShoppingRecordStoreStore.getState().setSelectedItem(shoppingRecord);
+            router.push("/shopping-record/edit");
+          }}
+          
+          sx={{ color: "#154718" }}
+        >
+          <EditIcon />
+        </IconButton>
       </Box>
 
       <Snackbar
