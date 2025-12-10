@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from app.core.exception_handlers import validation_exception_handler
-from app.routers import auth_router, category_router, item_router, shopping_list_router, shopping_record_router, stock_router, user_router
+from app.routers import auth_router, category_router, item_router, memo_router, shopping_list_router, shopping_record_router, stock_router, user_router
 from app.routers.test import test_router
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,7 +22,7 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-routers = [user_router, auth_router, category_router, item_router, stock_router, shopping_record_router, shopping_list_router, test_router]
+routers = [user_router, auth_router, category_router, item_router, stock_router, shopping_record_router, shopping_list_router, memo_router, test_router]
 
 for r in routers:
   app.include_router(r.router, prefix="/api/v1")
