@@ -89,8 +89,8 @@ async def test_login_success(client):
   data = response.json()
   assert data["success"]
   token = data["data"]
-  assert isinstance(token, str)
-  assert token.startswith("Bearer ")
+  assert isinstance(token["token"], str)
+  assert token["token"].startswith("Bearer ")
 
 
 async def test_login_wrong_password(client):

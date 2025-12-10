@@ -24,7 +24,7 @@ async def auth_client(client):
     "email": "test@example.com",
     "password": "password"
   })
-  token = login_res.json()["data"]
+  token = login_res.json()["data"]["token"]
   client.headers.update({"Authorization": f"{token}"})
   return client
 

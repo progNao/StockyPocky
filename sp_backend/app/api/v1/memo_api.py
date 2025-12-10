@@ -48,7 +48,8 @@ def update_memo_api(memo_id: int, request: CreateMemoRequest, db: Session):
   if request.type:
     memo.type = request.type
   memo.is_done = request.is_done
-  memo.tags = request.tags
+  if request.tags:
+    memo.tags = request.tags
     
   try:
     response = update_memo(memo, db)

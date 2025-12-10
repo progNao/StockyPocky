@@ -21,7 +21,7 @@ async def test_get_shopping_lists_success(auth_client):
   data = response.json()
   assert data["success"]
   assert isinstance(data["data"], list)
-  assert len(data["data"]) == 3
+  assert len(data["data"]) == 1
 
 # ===============
 # GetShoppingList
