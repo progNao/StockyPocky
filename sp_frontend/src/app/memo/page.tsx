@@ -274,7 +274,7 @@ export default function MemoPage() {
           width: 60,
           height: 60,
         }}
-        onClick={() => router.push("/memos/new")}
+        onClick={() => router.push("/memo/new")}
       >
         <AddIcon sx={{ fontSize: 30, color: "white" }} />
       </IconButton>

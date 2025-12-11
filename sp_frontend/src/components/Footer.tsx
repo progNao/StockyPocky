@@ -130,7 +130,7 @@ export default function Footer() {
         <Grid>
           <Box
             sx={{ textAlign: "center", cursor: "pointer" }}
-            onClick={() => router.push("/analysis")}
+            onClick={() => router.push("/memo")}
           >
             <Description
               sx={{
