@@ -28,11 +28,6 @@ export default function CategoryEditPage() {
     return null;
   };
 
-  const clear = () => {
-    setName("");
-    setIcon("");
-  };
-
   const handleUpdate = async () => {
     const validationError = validate();
     if (validationError) {
@@ -46,7 +41,6 @@ export default function CategoryEditPage() {
         name,
         icon,
       });
-      clear();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
         setError("サーバーエラーが発生しました。");
@@ -65,7 +59,6 @@ export default function CategoryEditPage() {
     try {
       setDeleteLoading(true);
       await api.delete(`/categories/${categoryId}`);
-      clear();
       router.push("/category");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {

@@ -6,34 +6,30 @@ import {
   Card,
   CardContent,
   Stack,
-  IconButton,
-  Alert,
   Snackbar,
+  Alert,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { use, useEffect, useState } from "react";
 import { useShoppingRecordStoreStore } from "@/stores/shoppingRecord";
 import { api } from "@/libs/api/client";
 import { ShoppingRecord, Item, ShoppingRecordDisplay } from "@/app/types";
 import axios from "axios";
-import EditIcon from "@mui/icons-material/Edit";
+import Header from "@/components/Header";
 
 export default function ShoppingRecordDetail({
   params,
 }: {
   params: Promise<{ id: number }>;
 }) {
-  const unwrapParams = use(params);
   const router = useRouter();
+  const unwrapParams = use(params);
   const shoppingRecord = useShoppingRecordStoreStore().selectedItem;
-  const [error, setError] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
-  const [loading, setLoading] = useState(false);
   const date = shoppingRecord?.bought_at
     ? new Date(shoppingRecord.bought_at)
     : null;
+  const [error, setError] = useState("");
+  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
 
   let formattedDate = "";
 
@@ -62,7 +58,6 @@ export default function ShoppingRecordDetail({
     if (!shoppingRecord) {
       const fetchItem = async () => {
         try {
-          setLoading(true);
           const resShoppingRecord = (
             await api.get(`/shopping-record/${unwrapParams.id}`)
           ).data.data;
@@ -73,16 +68,12 @@ export default function ShoppingRecordDetail({
           useShoppingRecordStoreStore.getState().setSelectedItem(mergeData);
         } catch (err: unknown) {
           if (axios.isAxiosError(err) && err.response) {
-            // その他のサーバーエラー
             setError("サーバーエラーが発生しました。");
             setOpenErrorSnackbar(true);
             return;
           }
-          // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
           setError("ネットワークエラーが発生しました。");
           setOpenErrorSnackbar(true);
-        } finally {
-          setLoading(false);
         }
       };
       fetchItem();
@@ -94,75 +85,22 @@ export default function ShoppingRecordDetail({
   return (
     <Box
       sx={{
-        backgroundColor: "#F2FFF5",
         minHeight: "100vh",
+        backgroundColor: "#F2FFF5",
         padding: 3,
-        maxWidth: "100vw",
-        overflowX: "hidden",
-        mb: 8,
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
+      <Header
+        title="購入履歴詳細"
+        onBackAction={() => router.push("/shopping-record")}
+        onEditPage={() => {
+          useShoppingRecordStoreStore
+            .getState()
+            .setSelectedItem(shoppingRecord);
+          router.push("/shopping-record/edit");
         }}
-      >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
-          <ArrowBackIosNewIcon />
-        </IconButton>
-
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          購入履歴詳細
-        </Typography>
-
-        {/* 更新画面 */}
-        <IconButton
-          onClick={() => {
-            useShoppingRecordStoreStore.getState().setSelectedItem(shoppingRecord);
-            router.push("/shopping-record/edit");
-          }}
-          
-          sx={{ color: "#154718" }}
-        >
-          <EditIcon />
-        </IconButton>
-      </Box>
-
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenSnackbar(false)}
-      >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          登録しました
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={openErrorSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenErrorSnackbar(false)}
-      >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      />
 
       {/* 日付 */}
       <Typography variant="h4" fontWeight="bold" mb={3}>
@@ -247,6 +185,14 @@ export default function ShoppingRecordDetail({
           <Typography variant="body1">{shoppingRecord?.store}</Typography>
         </CardContent>
       </Card>
+
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error">{error}</Alert>
+      </Snackbar>
     </Box>
   );
 }

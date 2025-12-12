@@ -1,33 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Box,
-  Typography,
-  IconButton,
-  Button,
-  Alert,
-  Snackbar,
-  Card,
-  CardContent,
-  CardMedia,
-} from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import { useShoppingRecordStoreStore } from "@/stores/shoppingRecord";
+import { Box, Typography, Button, Alert, Snackbar } from "@mui/material";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import { api } from "@/libs/api/client";
-import LoadingScreen from "@/components/LoadingScreen";
 import { Item, ShoppingRecord, ShoppingRecordDisplay } from "../types";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import Header from "@/components/Header";
+import ShoppingRecordCard from "@/components/ShoppingRecordCard";
 
 export default function ShoppingRecordPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"week" | "month">("week");
-  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<ShoppingRecordDisplay[]>([]);
+  const [mode, setMode] = useState<"week" | "month">("week");
+  const [error, setError] = useState("");
+  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
 
   // ヘルパー：渡した日付の「その週の月曜（ローカル時間・00:00）」を返す
   const getStartOfWeekMonday = (date: Date) => {
@@ -150,113 +137,24 @@ export default function ShoppingRecordPage() {
   };
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchShoppingRecord = async () => {
       try {
-        setLoading(true);
         // 購入履歴一覧取得
-        const resRecords = (await api.get("/shopping-records")).data.data;
+        const res = (await api.get("/shopping-records")).data.data;
         // アイテム取得
         const resItems = (await api.get("/items")).data.data;
 
         // 表示アイテムの整形
-        const mergeData = mergeItemData(resRecords, resItems);
+        const mergeData = mergeItemData(res, resItems);
         setItems(mergeData);
       } catch (err) {
-        setError("データ取得エラー：" + err);
+        setError("購入履歴取得エラー：" + err);
         setOpenErrorSnackbar(true);
-      } finally {
-        // 全て整形し終わってからロード解除
-        setLoading(false);
       }
     };
 
-    fetchAll();
+    fetchShoppingRecord();
   }, []);
-
-  const ShoppingRecordCard = (title: string, list: ShoppingRecordDisplay[]) => {
-    if (list.length === 0) return null;
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const router = useRouter();
-
-    return (
-      <>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            fontSize: 16,
-            fontWeight: 700,
-            mt: 2,
-            mb: 1,
-          }}
-        >
-          {title}
-        </Box>
-
-        {list.map((item) => (
-          <Card
-            key={item.id}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              borderRadius: "16px",
-              padding: 1.5,
-              backgroundColor: "#FFFFFF",
-              boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
-              minHeight: 70,
-              fontWeight: 700,
-              mt: 2,
-              mb: 1,
-            }}
-          >
-            <CardMedia
-              component="img"
-              image={item.image_url}
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: "10px",
-                objectFit: "cover",
-              }}
-            />
-            <CardContent
-              sx={{
-                flex: 1,
-                padding: "8px 0 8px 12px",
-                "&:last-child": { paddingBottom: "8px" },
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-              }}
-            >
-              <Typography
-                sx={{ fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}
-              >
-                {item.name}
-              </Typography>
-              <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
-                数量: {item.quantity} / 合計金額: ¥{item.price * item.quantity}
-              </Typography>
-            </CardContent>
-
-            {/* 詳細画面 */}
-            <IconButton
-              onClick={() => {
-                useShoppingRecordStoreStore.getState().setSelectedItem(item);
-                router.push(`/shopping-record/${item.id}`);
-              }}
-              sx={{ color: "#B7B7B7" }}
-            >
-              <ArrowForwardIosIcon fontSize="small" />
-            </IconButton>
-          </Card>
-        ))}
-      </>
-    );
-  };
-
-  if (loading) return <LoadingScreen />;
 
   return (
     <Box
@@ -264,49 +162,13 @@ export default function ShoppingRecordPage() {
         backgroundColor: "#F2FFF5",
         minHeight: "100vh",
         padding: 3,
-        maxWidth: "100vw",
-        overflowX: "hidden",
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          marginBottom: 3,
-        }}
-      >
-        <IconButton
-          onClick={() => router.push("/dashboard")}
-          sx={{ color: "#154718" }}
-        >
-          <ArrowBackIosNewIcon />
-        </IconButton>
-
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          購入履歴一覧
-        </Typography>
-      </Box>
-
-      <Snackbar
-        open={openErrorSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenErrorSnackbar(false)}
-      >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      <Header
+        title="購入履歴リスト"
+        onBackAction={() => router.push("/dashboard")}
+      />
 
       {/* 週ごと / 月ごと */}
       <Box
@@ -354,27 +216,35 @@ export default function ShoppingRecordPage() {
         <Box sx={{ px: 3, mt: 4, marginBottom: 10 }}>
           {mode === "week" ? (
             <>
-              {ShoppingRecordCard("今週", weekly.thisWeek)}
-              {ShoppingRecordCard("先週", weekly.lastWeek)}
-              {ShoppingRecordCard("過去", weekly.older)}
+              <ShoppingRecordCard title="今週" list={weekly.thisWeek} />
+              <ShoppingRecordCard title="今週" list={weekly.lastWeek} />
+              <ShoppingRecordCard title="今週" list={weekly.older} />
             </>
           ) : (
             <>
-              {ShoppingRecordCard("今月", monthly.thisMonth)}
-              {ShoppingRecordCard("先月", monthly.lastMonth)}
-              {ShoppingRecordCard("過去", monthly.older)}
+              <ShoppingRecordCard title="今月" list={monthly.thisMonth} />
+              <ShoppingRecordCard title="先月" list={monthly.lastMonth} />
+              <ShoppingRecordCard title="過去" list={monthly.older} />
             </>
           )}
         </Box>
       ) : (
         <Box sx={{ textAlign: "center", mt: 10 }}>
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
-            履歴がありません
+            履歴はありません
           </Typography>
         </Box>
       )}
 
       <Footer />
+
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error">{error}</Alert>
+      </Snackbar>
     </Box>
   );
 }

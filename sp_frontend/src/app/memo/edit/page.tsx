@@ -34,14 +34,6 @@ export default function MemoEditPage() {
     return null;
   };
 
-  const clear = () => {
-    setTitle("");
-    setContent("");
-    setType("");
-    setIsDone(false);
-    setTags("");
-  };
-
   const handleUpdate = async () => {
     const validationError = validate();
     if (validationError) {
@@ -61,7 +53,6 @@ export default function MemoEditPage() {
           .map((t) => t.trim())
           .filter((t) => t.length > 0),
       });
-      clear();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
         setError("サーバーエラーが発生しました。");
@@ -80,7 +71,6 @@ export default function MemoEditPage() {
     try {
       setDeleteLoading(true);
       await api.delete(`/memos/${memoId}`);
-      clear();
       router.push("/memo");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
