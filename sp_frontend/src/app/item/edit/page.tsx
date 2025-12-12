@@ -23,6 +23,7 @@ import imageCompression from "browser-image-compression";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { useItemStore } from "@/stores/item";
+import DangerButton from "@/components/DangerButton";
 
 export default function ItemEditPage() {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function ItemEditPage() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let changeFlg = false;
 
@@ -120,6 +122,25 @@ export default function ItemEditPage() {
       setOpenErrorSnackbar(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setDeleteLoading(true);
+      await api.delete(`/items/${itemId}`);
+      router.push("/item");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError("サーバーエラーが発生しました。");
+        setOpenErrorSnackbar(true);
+        return;
+      }
+      setError("ネットワークエラーが発生しました。");
+      setOpenErrorSnackbar(true);
+    } finally {
+      setDeleteLoading(false);
+      setOpenSnackbar(true);
     }
   };
 
@@ -394,6 +415,13 @@ export default function ItemEditPage() {
           "更新する"
         )}
       </Button>
+
+      {/* 削除ボタン */}
+      <DangerButton
+        onClick={handleDelete}
+        loading={deleteLoading}
+        label="削除"
+      />
     </Box>
   );
 }
