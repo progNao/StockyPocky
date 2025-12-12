@@ -152,7 +152,7 @@ export default function MemoPage() {
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {filteredMemos.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
-            一致するメモがありません
+            メモはありません
           </Typography>
         ) : (
           filteredMemos.map((m) => (

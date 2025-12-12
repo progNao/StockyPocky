@@ -64,12 +64,10 @@ export default function MemoEditPage() {
       clear();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
-        // その他のサーバーエラー
         setError("サーバーエラーが発生しました。");
         setOpenErrorSnackbar(true);
         return;
       }
-      // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
     } finally {
@@ -86,12 +84,10 @@ export default function MemoEditPage() {
       router.push("/memo");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
-        // その他のサーバーエラー
         setError("サーバーエラーが発生しました。");
         setOpenErrorSnackbar(true);
         return;
       }
-      // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
     } finally {

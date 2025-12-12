@@ -83,7 +83,7 @@ export default function CategoryPage() {
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {filteredCategories.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
-            一致するカテゴリがありません
+            カテゴリはありません
           </Typography>
         ) : (
           filteredCategories.map((cat) => (
