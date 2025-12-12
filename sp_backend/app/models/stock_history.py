@@ -1,5 +1,6 @@
-from sqlalchemy import TIMESTAMP, UUID, BigInteger, Column, DateTime, ForeignKey, Numeric, Text, func
+from sqlalchemy import UUID, BigInteger, Column, DateTime, ForeignKey, Numeric, Text, func
 from database import Base
+from sqlalchemy.orm import relationship
 
 class StockHistory(Base):
   __tablename__ = "stock_history"
@@ -11,3 +12,4 @@ class StockHistory(Base):
   item_id = Column(BigInteger, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
   user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
   created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+  item = relationship("Item", back_populates="stock_history")

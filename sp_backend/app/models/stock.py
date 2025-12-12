@@ -1,5 +1,6 @@
 from sqlalchemy import UUID, BigInteger, Column, ForeignKey, Numeric, Text
 from database import Base
+from sqlalchemy.orm import relationship
 
 class Stock(Base):
   __tablename__ = "stocks"
@@ -10,3 +11,5 @@ class Stock(Base):
   location = Column(Text, nullable=False)
   item_id = Column(BigInteger, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
   user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+  
+  item = relationship("Item", back_populates="stocks")

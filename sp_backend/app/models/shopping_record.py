@@ -1,5 +1,6 @@
 from sqlalchemy import UUID, BigInteger, Column, DateTime, ForeignKey, Numeric, Text
 from database import Base
+from sqlalchemy.orm import relationship
 
 class ShoppingRecord(Base):
   __tablename__ = "shopping_records"
@@ -11,3 +12,4 @@ class ShoppingRecord(Base):
   bought_at = Column(DateTime, nullable=False)
   item_id = Column(BigInteger, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
   user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+  item = relationship("Item", back_populates="shopping_records")

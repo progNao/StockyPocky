@@ -1,5 +1,6 @@
 from sqlalchemy import UUID, BigInteger, Boolean, Column, ForeignKey, Numeric, Text
 from database import Base
+from sqlalchemy.orm import relationship
 
 class Item(Base):
   __tablename__ = "items"
@@ -14,3 +15,8 @@ class Item(Base):
   is_favorite = Column(Boolean, nullable=False)
   user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
   category_id = Column(BigInteger, ForeignKey("categories.id"), nullable=False)
+  
+  stocks = relationship("Stock",back_populates="item",cascade="all, delete-orphan")
+  stock_history = relationship("StockHistory",back_populates="item",cascade="all, delete-orphan")
+  shopping_list = relationship("ShoppingList",back_populates="item",cascade="all, delete-orphan")
+  shopping_records = relationship("ShoppingRecord",back_populates="item",cascade="all, delete-orphan")
