@@ -94,10 +94,9 @@ export default function CategoryEditPage() {
   useEffect(() => {
     const fetchCategory = async () => {
       try {
-        const res = await api.get(`/categories/${categoryId}`);
-        const data = await res.data.data;
-        setName(data.name);
-        setIcon(data.icon);
+        const res = (await api.get(`/categories/${categoryId}`)).data.data;
+        setName(res.name);
+        setIcon(res.icon);
       } catch (err) {
         setError("カテゴリ取得エラー:" + err);
         setOpenErrorSnackbar(true);

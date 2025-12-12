@@ -35,9 +35,8 @@ export default function CategoryPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await api.get("/categories");
-        const data = await res.data.data;
-        setCategories(data);
+        const res = (await api.get("/categories")).data.data;
+        setCategories(res);
       } catch (err) {
         setError("カテゴリ取得エラー:" + err);
         setOpenErrorSnackbar(true);
@@ -100,7 +99,6 @@ export default function CategoryPage() {
                 backgroundColor: "white",
                 display: "flex",
                 alignItems: "center",
-                boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
                 cursor: "pointer",
               }}
             >
@@ -134,10 +132,8 @@ export default function CategoryPage() {
         )}
       </Box>
 
-      {/* 右下の追加ボタン */}
       <FabButton onClick={() => router.push("/category/new")}/>
 
-      {/* 下部ナビバー（仮） */}
       <Footer />
 
       <Snackbar
@@ -145,7 +141,7 @@ export default function CategoryPage() {
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
       >
-        <Alert severity="error" sx={{ width: "100%" }}>
+        <Alert severity="error">
           {error}
         </Alert>
       </Snackbar>

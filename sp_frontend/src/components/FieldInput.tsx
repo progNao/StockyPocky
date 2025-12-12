@@ -8,6 +8,7 @@ type FieldInputProps = {
   onChange: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  large?: boolean;
 };
 
 export default function FieldInput({
@@ -16,6 +17,7 @@ export default function FieldInput({
   onChange,
   placeholder,
   required,
+  large,
 }: FieldInputProps) {
   return (
     <div>
@@ -26,6 +28,8 @@ export default function FieldInput({
 
       <TextField
         fullWidth
+        multiline={large}
+        minRows={large ? 3 : 1}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

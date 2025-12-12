@@ -1,22 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Snackbar,
-  Alert,
-  IconButton,
-  Switch,
-  CircularProgress,
-} from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import { Box, Snackbar, Alert } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { api } from "@/libs/api/client";
 import axios from "axios";
 import { useMemoStore } from "@/stores/memo";
+import Header from "@/components/Header";
+import FieldInput from "@/components/FieldInput";
+import ToggleSwitch from "@/components/ToggleSwitch";
+import DangerButton from "@/components/DangerButton";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function MemoEditPage() {
   const router = useRouter();
@@ -27,11 +21,10 @@ export default function MemoEditPage() {
   const [type, setType] = useState("");
   const [isDone, setIsDone] = useState(false);
   const [tags, setTags] = useState("");
-
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const validate = () => {
@@ -39,6 +32,14 @@ export default function MemoEditPage() {
       return "タイトルは必須です。";
     }
     return null;
+  };
+
+  const clear = () => {
+    setTitle("");
+    setContent("");
+    setType("");
+    setIsDone(false);
+    setTags("");
   };
 
   const handleUpdate = async () => {
@@ -60,8 +61,7 @@ export default function MemoEditPage() {
           .map((t) => t.trim())
           .filter((t) => t.length > 0),
       });
-      setOpenSnackbar(true);
-      router.push("/memo");
+      clear();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
         // その他のサーバーエラー
@@ -71,10 +71,10 @@ export default function MemoEditPage() {
       }
       // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
-      console.log(err);
       setOpenErrorSnackbar(true);
     } finally {
       setLoading(false);
+      setOpenSnackbar(true);
     }
   };
 
@@ -82,7 +82,7 @@ export default function MemoEditPage() {
     try {
       setDeleteLoading(true);
       await api.delete(`/memos/${memoId}`);
-      setOpenSnackbar(true);
+      clear();
       router.push("/memo");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
@@ -96,21 +96,21 @@ export default function MemoEditPage() {
       setOpenErrorSnackbar(true);
     } finally {
       setDeleteLoading(false);
+      setOpenSnackbar(true);
     }
   };
 
   useEffect(() => {
     const fetchMemo = async () => {
       try {
-        const res = await api.get(`/memos/${memoId}`);
-        const data = await res.data.data;
-        setTitle(data.title);
-        setContent(data.content);
-        setType(data.type);
-        setIsDone(data.is_done);
-        setTags(data.tags.join(", "));
+        const res = (await api.get(`/memos/${memoId}`)).data.data;
+        setTitle(res.title);
+        setContent(res.content);
+        setType(res.type);
+        setIsDone(res.is_done);
+        setTags(res.tags.join(", "));
       } catch (err) {
-        setError("カテゴリ取得エラー:" + err);
+        setError("メモ取得エラー:" + err);
         setOpenErrorSnackbar(true);
       }
     };
@@ -127,217 +127,70 @@ export default function MemoEditPage() {
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
-        }}
-      >
-        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
-          <ArrowBackIosNewIcon />
-        </IconButton>
+      <Header title="メモ更新" onBackAction={() => router.push("/memo")} />
 
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          メモ登録
-        </Typography>
+      {/* タイトル */}
+      <FieldInput
+        label="メモタイトル"
+        value={title}
+        onChange={setTitle}
+        placeholder="買い物メモ"
+        required
+      />
 
-        {/* 右側ダミー（位置合わせ用） */}
-        <Box sx={{ width: 40 }} />
-      </Box>
+      {/* 内容 */}
+      <FieldInput
+        label="内容"
+        value={content}
+        onChange={setContent}
+        placeholder="内容を入力"
+        large
+      />
 
-      {/* 成功 */}
+      {/* タイプ */}
+      <FieldInput
+        label="タイプ"
+        value={type}
+        onChange={setType}
+        placeholder="消耗品"
+      />
+
+      {/* 完了フラグ */}
+      <ToggleSwitch label="完了フラグ" checked={isDone} onChange={setIsDone} />
+
+      {/* タグ */}
+      <FieldInput
+        label="タグ（カンマ区切り）"
+        value={tags}
+        onChange={setTags}
+        placeholder="日用品, セール"
+      />
+
+      {/* 更新ボタン */}
+      <PrimaryButton onClick={handleUpdate} loading={loading} label="更新" />
+
+      {/* 削除ボタン */}
+      <DangerButton
+        onClick={handleDelete}
+        loading={deleteLoading}
+        label="削除"
+      />
+
       <Snackbar
         open={openSnackbar}
         autoHideDuration={2500}
         onClose={() => setOpenSnackbar(false)}
       >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          登録しました
-        </Alert>
+        <Alert severity="success">更新しました</Alert>
       </Snackbar>
 
-      {/* エラー */}
       <Snackbar
         open={openErrorSnackbar}
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
       >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       </Snackbar>
-
-      {/* タイトル */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        タイトル *
-      </Typography>
-      <TextField
-        fullWidth
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="例：買い物メモ"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* 内容 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>内容</Typography>
-      <TextField
-        fullWidth
-        multiline
-        minRows={3}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="内容を入力"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 1,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* タイプ */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>タイプ</Typography>
-      <TextField
-        fullWidth
-        value={type}
-        onChange={(e) => setType(e.target.value)}
-        placeholder="例：消耗品"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* 完了フラグ */}
-      <Box
-        sx={{
-          backgroundColor: "white",
-          padding: 2,
-          borderRadius: "20px",
-          marginBottom: 3,
-          boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography sx={{ fontWeight: 600 }}>完了フラグ</Typography>
-
-        <Switch
-          checked={isDone}
-          onChange={(e) => setIsDone(e.target.checked)}
-          sx={{
-            "& .MuiSwitch-switchBase.Mui-checked": {
-              color: "#32D26A",
-            },
-            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-              backgroundColor: "#32D26A",
-            },
-          }}
-        />
-      </Box>
-
-      {/* タグ */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        タグ（カンマ区切り）
-      </Typography>
-      <TextField
-        fullWidth
-        value={tags}
-        onChange={(e) => setTags(e.target.value)}
-        placeholder="例：日用品, セール"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 4 }}
-      />
-
-      {/* 登録ボタン */}
-      <Button
-        fullWidth
-        variant="contained"
-        sx={{
-          backgroundColor: "#32D26A",
-          paddingY: 2,
-          marginY: 3,
-          borderRadius: "40px",
-          fontWeight: 700,
-          fontSize: "18px",
-          color: "#FFFFFF",
-          boxShadow: "0 8px 16px rgba(50,210,106,0.4)",
-          "&:hover": {
-            backgroundColor: "#29C05F",
-          },
-        }}
-        onClick={handleUpdate}
-        disabled={loading}
-      >
-        {loading ? (
-          <CircularProgress size={26} sx={{ color: "white" }} />
-        ) : (
-          "更新する"
-        )}
-      </Button>
-
-      {/* 削除ボタン */}
-      <Button
-        fullWidth
-        variant="contained"
-        sx={{
-          backgroundColor: "#FF6B6B",
-          paddingY: 2,
-          borderRadius: "40px",
-          fontWeight: 700,
-          fontSize: "18px",
-          color: "#ffffff",
-          boxShadow: "0 8px 16px rgba(255, 107, 107, 0.4)",
-          transition: "0.2s",
-          "&:hover": {
-            backgroundColor: "#FF5A5A",
-            boxShadow: "0 6px 12px rgba(255, 107, 107, 0.6)",
-          },
-          "&:active": {
-            backgroundColor: "#E14B4B",
-          },
-        }}
-        onClick={handleDelete}
-      >
-        {deleteLoading ? (
-          <CircularProgress size={26} sx={{ color: "white" }} />
-        ) : (
-          "削除する"
-        )}
-      </Button>
     </Box>
   );
 }
