@@ -21,6 +21,8 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import LoadingScreen from "@/components/LoadingScreen";
 import { api } from "@/libs/api/client";
 import { Memo } from "../types";
+import Footer from "@/components/Footer";
+import { useMemoStore } from "@/stores/memo";
 
 export default function MemoPage() {
   const router = useRouter();
@@ -207,6 +209,10 @@ export default function MemoPage() {
               borderRadius: "22px",
               backgroundColor: "white",
             }}
+            onClick={() => {
+              useMemoStore.getState().setSelectedItem(m);
+              router.push("/memo/edit");
+            }}
           >
             {/* Top Row */}
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -268,16 +274,17 @@ export default function MemoPage() {
       <IconButton
         sx={{
           position: "fixed",
-          bottom: 30,
+          bottom: 40,
           right: 30,
           backgroundColor: "#3ECF8E",
-          width: 60,
-          height: 60,
+          marginBottom: 10,
         }}
         onClick={() => router.push("/memo/new")}
       >
         <AddIcon sx={{ fontSize: 30, color: "white" }} />
       </IconButton>
+
+      <Footer />
     </Box>
   );
 }

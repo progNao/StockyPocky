@@ -134,7 +134,7 @@ export default function Footer() {
           >
             <Description
               sx={{
-                color: isActive("/analysis") ? "#32D26A" : "#7A7A7A",
+                color: isActive("/memo") ? "#32D26A" : "#7A7A7A",
                 fontSize: 28,
               }}
             />
@@ -142,7 +142,7 @@ export default function Footer() {
               sx={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: isActive("/analysis") ? "#32D26A" : "#7A7A7A",
+                color: isActive("/memo") ? "#32D26A" : "#7A7A7A",
                 mt: 0.5,
               }}
             >
