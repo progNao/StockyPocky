@@ -2,18 +2,11 @@
 import { useState } from "react";
 import { api } from "@/libs/api/client";
 import { useRouter } from "next/navigation";
-import {
-  Button,
-  TextField,
-  Box,
-  Typography,
-  IconButton,
-  Alert,
-  Snackbar,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Alert, Snackbar } from "@mui/material";
 import axios from "axios";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import Header from "@/components/Header";
+import FieldInput from "@/components/FieldInput";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function CategoryNewPage() {
   const router = useRouter();
@@ -49,7 +42,6 @@ export default function CategoryNewPage() {
         name,
         icon,
       });
-      setOpenSnackbar(true);
       clear();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
@@ -63,6 +55,7 @@ export default function CategoryNewPage() {
       setOpenErrorSnackbar(true);
     } finally {
       setLoading(false);
+      setOpenSnackbar(true);
     }
   };
 
@@ -75,43 +68,34 @@ export default function CategoryNewPage() {
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
-        }}
-      >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
-          <ArrowBackIosNewIcon />
-        </IconButton>
+      <Header title="カテゴリ登録" onBackAction={() => router.push("/category")} />
 
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          カテゴリ登録
-        </Typography>
-      </Box>
+      {/* カテゴリ名 */}
+      <FieldInput
+        label="カテゴリ名"
+        value={name}
+        onChange={setName}
+        placeholder="日用品"
+        required
+      />
+
+      {/* アイコン */}
+      <FieldInput
+        label="アイコン"
+        value={icon}
+        onChange={setIcon}
+        placeholder="🧻"
+      />
+
+      {/* 登録ボタン */}
+      <PrimaryButton onClick={handleCreate} loading={loading} label="登録" />
 
       <Snackbar
         open={openSnackbar}
         autoHideDuration={2500}
         onClose={() => setOpenSnackbar(false)}
       >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          更新しました
-        </Alert>
+        <Alert severity="success">登録しました</Alert>
       </Snackbar>
 
       <Snackbar
@@ -119,73 +103,8 @@ export default function CategoryNewPage() {
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
       >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       </Snackbar>
-
-      {/* カテゴリ名 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        カテゴリ名 *
-      </Typography>
-      <TextField
-        fullWidth
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="日用品"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* アイコン */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        アイコン
-      </Typography>
-      <TextField
-        fullWidth
-        value={icon}
-        onChange={(e) => setIcon(e.target.value)}
-        placeholder="🧻"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* 登録ボタン */}
-      <Button
-        fullWidth
-        variant="contained"
-        sx={{
-          backgroundColor: "#32D26A",
-          paddingY: 2,
-          borderRadius: "40px",
-          fontWeight: 700,
-          fontSize: "18px",
-          color: "#FFFFFF",
-          boxShadow: "0 8px 16px rgba(50,210,106,0.4)",
-          "&:hover": {
-            backgroundColor: "#29C05F",
-          },
-        }}
-        onClick={handleCreate}
-      >
-        {loading ? (
-          <CircularProgress size={26} sx={{ color: "white" }} />
-        ) : (
-          "登録する"
-        )}
-      </Button>
     </Box>
   );
 }

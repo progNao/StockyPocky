@@ -21,6 +21,3 @@ class CreateCategoryRequest(BaseModel):
     if not v or v.strip() == "":
       raise ValueError("Name is required")
     return v
-
-class UpdateCategoryRequest(CreateCategoryRequest):
-  id: int

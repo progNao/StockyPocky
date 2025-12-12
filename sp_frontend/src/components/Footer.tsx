@@ -1,3 +1,5 @@
+"use client";
+
 import { ShoppingCart, Description, Home, Settings } from "@mui/icons-material";
 import { Box, Grid, Typography } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";

@@ -58,8 +58,7 @@ async def test_create_category_name_null_check(auth_client):
 
 async def test_update_category_success(auth_client):
   category = await __create_category("apple", "🍎", auth_client)
-  response = await auth_client.put("/api/v1/categories", json={
-    "id": category.json()["data"]["id"],
+  response = await auth_client.put(f"/api/v1/categories/{category.json()["data"]["id"]}", json={
     "name": "orange",
     "icon": "🍊"
   })
@@ -72,8 +71,7 @@ async def test_update_category_success(auth_client):
 
 async def test_update_category_name_check(auth_client):
   category = await __create_category("apple", "🍎", auth_client)
-  response = await auth_client.put("/api/v1/categories", json={
-    "id": category.json()["data"]["id"],
+  response = await auth_client.put(f"/api/v1/categories/{category.json()["data"]["id"]}", json={
     "name": "",
     "icon": "🍎"
   })
@@ -83,8 +81,7 @@ async def test_update_category_name_check(auth_client):
 
 async def test_update_category_name_null_check(auth_client):
   category = await __create_category("apple", "🍎", auth_client)
-  response = await auth_client.put("/api/v1/categories", json={
-    "id": category.json()["data"]["id"],
+  response = await auth_client.put(f"/api/v1/categories/{category.json()["data"]["id"]}", json={
     "icon": "🍎"
   })
   assert response.status_code == 422

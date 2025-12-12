@@ -6,29 +6,27 @@ import {
   TextField,
   InputAdornment,
   Card,
-  Fab,
   Avatar,
-  IconButton,
   Snackbar,
   Alert,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useRouter } from "next/navigation";
-import AddIcon from "@mui/icons-material/Add";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { useEffect, useState } from "react";
 import { Category } from "../types";
 import { api } from "@/libs/api/client";
 import { useCategoryStore } from "@/stores/category";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import FabButton from "@/components/FabButton";
 
 export default function CategoryPage() {
   const router = useRouter();
-  const [search, setSearch] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
+  const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
 
   const filteredCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(search.toLowerCase())
@@ -58,47 +56,7 @@ export default function CategoryPage() {
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
-        }}
-      >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton
-          onClick={() => router.push("/dashboard")}
-          sx={{ color: "#154718" }}
-        >
-          <ArrowBackIosNewIcon />
-        </IconButton>
-
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          カテゴリリスト
-        </Typography>
-      </Box>
-
-      <Snackbar
-        open={openErrorSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenErrorSnackbar(false)}
-      >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      <Header title="カテゴリリスト" onBackAction={() => router.push("/dashboard")} />
 
       {/* 🔍 検索欄 */}
       <TextField
@@ -177,22 +135,20 @@ export default function CategoryPage() {
       </Box>
 
       {/* 右下の追加ボタン */}
-      <Fab
-        color="primary"
-        onClick={() => router.push("/category/new")}
-        sx={{
-          position: "fixed",
-          bottom: 40,
-          right: 30,
-          backgroundColor: "#3ECF8E",
-          marginBottom: 10,
-        }}
-      >
-        <AddIcon sx={{ fontSize: 32 }} />
-      </Fab>
+      <FabButton onClick={() => router.push("/category/new")}/>
 
       {/* 下部ナビバー（仮） */}
       <Footer />
+
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

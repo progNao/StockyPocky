@@ -4,7 +4,7 @@ from app.models.category import Category
 from app.models.user import User
 from app.repositories.categories_repo import create_category, delete_category, get_categories, get_category_by_id, update_category
 from app.repositories.items_repo import get_item_by_category
-from app.schemas.category import CategoryResponse, CreateCategoryRequest, UpdateCategoryRequest
+from app.schemas.category import CategoryResponse, CreateCategoryRequest
 from app.utils.response import error, success
 
 def get_categories_api(db: Session, current_user: User):
@@ -34,8 +34,8 @@ def create_category_api(request: CreateCategoryRequest, db: Session, current_use
     db.rollback()
     return error("db_error", 500)
 
-def update_category_api(request: UpdateCategoryRequest, db: Session):
-  category = __private_category_check(request.id, db)
+def update_category_api(category_id: int, request: CreateCategoryRequest, db: Session):
+  category = __private_category_check(category_id, db)
   
   if isinstance(category, JSONResponse):
     return category

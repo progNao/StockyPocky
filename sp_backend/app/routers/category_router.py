@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends
 from app.api.v1.categories_api import create_category_api, delete_category_api, get_categories_api, get_category_api, update_category_api
 from app.models.user import User
-from app.schemas.category import CreateCategoryRequest, UpdateCategoryRequest
+from app.schemas.category import CreateCategoryRequest
 from app.schemas.response import SuccessResponse
 from app.utils.auth import get_current_user
 from database import get_db
@@ -22,9 +22,9 @@ def get_category(category_id: int, db: Session = Depends(get_db)):
 def create_category(request: CreateCategoryRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
   return create_category_api(request, db, current_user)
 
-@router.put("", response_model=SuccessResponse)
-def update_category(request: UpdateCategoryRequest, db: Session = Depends(get_db)):
-  return update_category_api(request, db)
+@router.put("/{category_id}", response_model=SuccessResponse)
+def update_category(category_id, request: CreateCategoryRequest, db: Session = Depends(get_db)):
+  return update_category_api(category_id, request, db)
 
 @router.delete("/{category_id}", response_model=SuccessResponse)
 def delete_category(category_id: int, db: Session = Depends(get_db)):
