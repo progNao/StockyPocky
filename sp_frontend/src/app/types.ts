@@ -1,15 +1,4 @@
 // types.ts
-export interface Task {
-  id: string;
-  title: string;
-  done: boolean;
-}
-
-export interface DashboardData {
-  userName: string;
-  tasks: Task[];
-}
-
 export interface Category {
   id: number;
   name: string;

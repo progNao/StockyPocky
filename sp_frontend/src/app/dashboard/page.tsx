@@ -17,9 +17,9 @@ import {
 import { ShoppingCart, Settings } from "@mui/icons-material";
 import {
   Category,
-  DashboardData,
   Item,
   ItemListDisplay,
+  Memo,
   ShoppingList,
   ShoppingListDisplay,
   Stock,
@@ -34,18 +34,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import FooterDashBoard from "@/components/FooterDashBoard";
 import HistoryIcon from "@mui/icons-material/History";
 
-// モックデータ（後で API データに差し替え）
-const mockData: DashboardData = {
-  userName: "ユーザー名",
-  tasks: [
-    { id: "t1", title: "キッチンの掃除", done: true },
-    { id: "t2", title: "トイレットペーパーを補充", done: false },
-    { id: "t3", title: "週末の買い出し計画", done: false },
-  ],
-};
-
 export default function DashboardPage() {
-  const data = mockData;
   const router = useRouter();
   const { logout } = useAuthStore();
   const username = useUserStore((state) => state.username);
@@ -61,6 +50,7 @@ export default function DashboardPage() {
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [error, setError] = useState("");
   const [shoppingList, setShoppingList] = useState<ShoppingListDisplay[]>([]);
+  const [memoList, setMemoList] = useState<Memo[]>([]);
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
@@ -178,6 +168,10 @@ export default function DashboardPage() {
         // 買い物リスト取得
         const resShopping = await api.get("/shopping-list");
         const dataShopping = resShopping.data.data;
+        // メモ一覧取得
+        const resMemo = await api.get("/memos");
+        const dataMemo = resMemo.data.data;
+        setMemoList(dataMemo);
 
         // 表示アイテムの整形
         const mergeData = mergeItemData(dataItems, dataCategories, dataStocks);
@@ -342,19 +336,19 @@ export default function DashboardPage() {
           今日のタスクとメモ
         </Typography>
         <Stack spacing={1}>
-          {data.tasks.map((task) => (
+          {memoList.map((memo) => (
             <Card
-              key={task.id}
+              key={memo.id}
               sx={{
                 borderRadius: 2,
-                backgroundColor: task.done ? "#e0f7e9" : "#fff",
+                backgroundColor: memo.is_done ? "#e0f7e9" : "#fff",
                 p: 2,
               }}
             >
               <Typography
-                sx={{ textDecoration: task.done ? "line-through" : "none" }}
+                sx={{ textDecoration: memo.is_done ? "line-through" : "none" }}
               >
-                {task.title}
+                {memo.title}
               </Typography>
             </Card>
           ))}
