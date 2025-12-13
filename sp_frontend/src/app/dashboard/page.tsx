@@ -22,7 +22,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth";
 import { api } from "@/libs/api/client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useUserStore } from "@/stores/user";
 import LoadingScreen from "@/components/LoadingScreen";
 import Footer from "@/components/Footer";
@@ -54,14 +54,14 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
+    } catch {
+    } finally {
       clearUser();
       localStorage.removeItem("access_token");
       logout();
       document.cookie = "access_token=; Max-Age=0; path=/;";
-      router.push("/");
-    } catch {
-      logout();
-      router.push("/");
+
+      router.push("/?logout=1");
     }
   };
 
@@ -71,60 +71,66 @@ export default function DashboardPage() {
     return false;
   };
 
-  const mergeItemData = (
-    dataItems: Item[],
-    dataCategories: Category[],
-    dataStocks: Stock[]
-  ): ItemListDisplay[] => {
-    const categoryMap = new Map(
-      dataCategories.map((c: Category) => [c.id, c.name])
-    );
-    const stockMap = new Map(dataStocks.map((s: Stock) => [s.item_id, s]));
-    const result: ItemListDisplay[] = dataItems.map((item) => {
-      const stock = stockMap.get(item.id);
-      return {
-        id: item.id,
-        name: item.name,
-        categoryId: item.category_id,
-        categoryName: categoryMap.get(item.category_id) ?? "未分類",
-        stockQuantity: stock ? stock.quantity : 0,
-        isFavorite: item.is_favorite,
-        threshold: stock ? stock.threshold : 0,
-        imageUrl: item.image_url,
-        location: stock ? stock.location : "",
-      };
-    });
-    return result
-      .filter((item) => isLowStock(item.stockQuantity, item.threshold))
-      .slice(0, 3);
-  };
+  const mergeItemData = useCallback(
+    (
+      dataItems: Item[],
+      dataCategories: Category[],
+      dataStocks: Stock[]
+    ): ItemListDisplay[] => {
+      const categoryMap = new Map(
+        dataCategories.map((c: Category) => [c.id, c.name])
+      );
+      const stockMap = new Map(dataStocks.map((s: Stock) => [s.item_id, s]));
+      const result: ItemListDisplay[] = dataItems.map((item) => {
+        const stock = stockMap.get(item.id);
+        return {
+          id: item.id,
+          name: item.name,
+          categoryId: item.category_id,
+          categoryName: categoryMap.get(item.category_id) ?? "未分類",
+          stockQuantity: stock ? stock.quantity : 0,
+          isFavorite: item.is_favorite,
+          threshold: stock ? stock.threshold : 0,
+          imageUrl: item.image_url,
+          location: stock ? stock.location : "",
+        };
+      });
+      return result
+        .filter((item) => isLowStock(item.stockQuantity, item.threshold))
+        .slice(0, 3);
+    },
+    []
+  );
 
-  const mergeShoppingData = (
-    dataItems: Item[],
-    dataShopping: ShoppingList[]
-  ): ShoppingListDisplay[] => {
-    const itemMap = new Map(dataItems.map((i: Item) => [i.id, i]));
-    const result: ShoppingListDisplay[] = dataShopping.map((shopping) => {
-      const item = itemMap.get(shopping.item_id);
-      return {
-        id: shopping.id,
-        quantity: shopping.quantity,
-        checked: shopping.checked,
-        user_id: shopping.user_id,
-        item_id: shopping.item_id,
-        name: item ? item.name : "",
-        image_url: item ? item.image_url : "",
-        notes: item ? item.notes : "",
-        added_at: shopping.added_at,
-      };
-    });
-    return result
-      .sort(
-        (a, b) =>
-          new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
-      )
-      .slice(0, 3);
-  };
+  const mergeShoppingData = useCallback(
+    (
+      dataItems: Item[],
+      dataShopping: ShoppingList[]
+    ): ShoppingListDisplay[] => {
+      const itemMap = new Map(dataItems.map((i: Item) => [i.id, i]));
+      const result: ShoppingListDisplay[] = dataShopping.map((shopping) => {
+        const item = itemMap.get(shopping.item_id);
+        return {
+          id: shopping.id,
+          quantity: shopping.quantity,
+          checked: shopping.checked,
+          user_id: shopping.user_id,
+          item_id: shopping.item_id,
+          name: item ? item.name : "",
+          image_url: item ? item.image_url : "",
+          notes: item ? item.notes : "",
+          added_at: shopping.added_at,
+        };
+      });
+      return result
+        .sort(
+          (a, b) =>
+            new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
+        )
+        .slice(0, 3);
+    },
+    []
+  );
 
   useEffect(() => {
     setDisplayName(username);
@@ -164,7 +170,7 @@ export default function DashboardPage() {
     };
 
     fetchAll();
-  }, [username]);
+  }, [username, mergeItemData, mergeShoppingData]);
 
   if (loading) return <LoadingScreen />;
 
@@ -174,7 +180,6 @@ export default function DashboardPage() {
         p: 3,
         background: `#e9fff3`,
         paddingBottom: "120px",
-        minHeight: "100vh",
       }}
     >
       {/* ヘッダー */}

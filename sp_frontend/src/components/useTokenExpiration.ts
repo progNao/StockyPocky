@@ -19,7 +19,7 @@ export function useTokenExpiration() {
         console.log("🔐 Token expired → Removing...");
         localStorage.removeItem("token");
         localStorage.removeItem("token_issued_at");
-        router.push("/login");
+        router.push("/login?expired=1");
       }
     };
 
@@ -30,5 +30,5 @@ export function useTokenExpiration() {
     const interval = setInterval(check, 60 * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [router]);
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/libs/api/client";
 import { useAuthStore } from "@/stores/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Button,
   TextField,
@@ -11,6 +11,7 @@ import {
   Typography,
   Container,
   Alert,
+  Snackbar,
 } from "@mui/material";
 import Image from "next/image";
 import axios from "axios";
@@ -23,6 +24,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const [open, setOpen] = useState(false);
 
   const validate = () => {
     if (!email || !password) {
@@ -79,6 +82,14 @@ export default function LoginPage() {
     }
   };
 
+  useEffect(() => {
+    if (searchParams.get("expired") === "1") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOpen(true);
+      router.replace("/login");
+    }
+  }, [searchParams, router]);
+
   return (
     <Box
       sx={{
@@ -94,7 +105,6 @@ export default function LoginPage() {
         padding: 2,
       }}
     >
-
       <Container maxWidth="xs" sx={{ textAlign: "center" }}>
         {/* ロゴ（左上に傾けたカード風） */}
         <Box
@@ -231,6 +241,17 @@ export default function LoginPage() {
           メイン画面に戻る
         </Button>
       </Container>
+
+      <Snackbar
+        open={open}
+        autoHideDuration={4000}
+        onClose={() => setOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="warning" variant="filled">
+          セッションの有効期限が切れました。再度ログインしてください。
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

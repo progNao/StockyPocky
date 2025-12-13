@@ -78,7 +78,7 @@ export default function ItemEditPage() {
       setPreviewUrl(preview);
       setImageFile(compressed);
     } catch (err) {
-      console.error("画像圧縮エラー:", err);
+      setError("画像圧縮エラー:" + err);
     }
   };
 

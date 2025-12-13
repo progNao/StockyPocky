@@ -1,9 +1,29 @@
 "use client";
 
-import { Box, Button, Typography, Container } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  Container,
+  Alert,
+  Snackbar,
+} from "@mui/material";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function MainPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("logout") === "1") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOpen(true);
+      router.replace("/");
+    }
+  }, [searchParams, router]);
   return (
     <Box
       sx={{
@@ -113,6 +133,17 @@ export default function MainPage() {
           サインアップ
         </Button>
       </Container>
+
+      <Snackbar
+        open={open}
+        autoHideDuration={3000}
+        onClose={() => setOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="success" variant="filled">
+          ログアウトしました
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
