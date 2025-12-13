@@ -5,10 +5,10 @@ from pydantic import BaseModel, field_validator
 class MemoResponse(BaseModel):
   id: int
   title: str
-  content: str
-  type: str
+  content: Optional[str] = None
+  type: Optional[str] = None
   is_done: bool
-  tags: list[str]
+  tags: Optional[list[str]] = None
   user_id: UUID
   
   model_config = {

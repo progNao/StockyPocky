@@ -3,7 +3,6 @@
 import {
   Box,
   Typography,
-  IconButton,
   Card,
   CardMedia,
   Divider,
@@ -11,15 +10,9 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Paper,
   TextField,
 } from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import EditIcon from "@mui/icons-material/Edit";
 import { useRouter } from "next/navigation";
 import { useItemStore } from "@/stores/item";
 import { api } from "@/libs/api/client";
@@ -34,6 +27,9 @@ import {
 } from "@/app/types";
 import ErrorPage from "@/components/ErrorPage";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import Header from "@/components/Header";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { useFormatDate } from "@/hooks/useFormatDate";
 
 export default function ItemDetailPage({
   params,
@@ -63,6 +59,7 @@ export default function ItemDetailPage({
   const [threshold, setThreshold] = useState<number>();
   const [memo, setMemo] = useState("");
   const [stockHistory, setStockHistory] = useState<StockHistory[]>([]);
+  const { formatDate } = useFormatDate();
 
   const validate = () => {
     if (!quantity || !reason || !location || !threshold) {
@@ -71,35 +68,10 @@ export default function ItemDetailPage({
     return null;
   };
 
-  const handleIncrease = () => {
-    setOpenDialogIncrease(true);
-  };
-
-  const handleDecrease = () => {
-    setOpenDialogDecrease(true);
-  };
-
-  const handleManual = () => {
-    setOpenDialogManual(true);
-  };
-
   const handleCancel = () => {
     setOpenDialogIncrease(false);
     setOpenDialogDecrease(false);
     setOpenDialogManual(false);
-  };
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-
-    const yyyy = d.getFullYear();
-    const MM = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    const ss = String(d.getSeconds()).padStart(2, "0");
-
-    return `${yyyy}/${MM}/${dd} ${hh}:${mm}:${ss}`;
   };
 
   const mergeItemData = (
@@ -127,7 +99,6 @@ export default function ItemDetailPage({
     if (!item) {
       const fetchItem = async () => {
         try {
-          setLoading(true);
           const resItem = (await api.get(`/items/${unwrapParams.id}`)).data
             .data;
           const resStock = (await api.get(`/items/${unwrapParams.id}/stock`))
@@ -137,31 +108,21 @@ export default function ItemDetailPage({
           const mergeData = mergeItemData(resItem, resCategory, resStock);
           useItemStore.getState().setSelectedItem(mergeData);
         } catch (err) {
-          console.error("アイテム取得エラー:", err);
-        } finally {
-          setLoading(false);
+          setError("アイテム取得エラー：" + err);
+          setOpenErrorSnackbar(true);
         }
       };
       fetchItem();
     }
     const history = async () => {
       try {
-        // 在庫履歴取得
         const stockH = (
           await api.get(`/items/${unwrapParams.id}/stock-history`)
         ).data.data;
         setStockHistory(stockH);
       } catch (err) {
-        if (axios.isAxiosError(err) && err.response) {
-          const status = err.response.status;
-          if (status === 404) {
-            setStockHistory([]);
-            return;
-          }
-          // その他のサーバーエラー
-          setError("ログインに失敗しました。時間をおいて再度お試しください。");
-          return;
-        }
+        setError("在庫履歴取得エラー：" + err);
+        setOpenErrorSnackbar(true);
       }
     };
     history();
@@ -189,20 +150,18 @@ export default function ItemDetailPage({
         location: item.location,
       });
       setStock_in_de((prev) => (mode === "increase" ? prev + 1 : prev - 1));
-      setOpenSnackbar(true);
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
-        // その他のサーバーエラー
         setError("サーバーエラーが発生しました。");
         setOpenErrorSnackbar(true);
         return;
       }
-      // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
     } finally {
       setLoading(false);
       handleCancel();
+      setOpenSnackbar(true);
     }
   };
 
@@ -226,20 +185,18 @@ export default function ItemDetailPage({
       });
       setStock_in_de(() => (quantity ? quantity : 0));
       setThreshold_in_de(() => (threshold ? threshold : 0));
-      setOpenSnackbar(true);
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
-        // その他のサーバーエラー
         setError("サーバーエラーが発生しました。");
         setOpenErrorSnackbar(true);
         return;
       }
-      // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
     } finally {
       setLoading(false);
       handleCancel();
+      setOpenSnackbar(true);
     }
   };
   const latestHistories = [...stockHistory]
@@ -261,66 +218,14 @@ export default function ItemDetailPage({
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
+      <Header
+        title="アイテム詳細"
+        onBackAction={() => router.push("/item")}
+        onEditPage={() => {
+          useItemStore.getState().setSelectedItem(item);
+          router.push("/item/edit");
         }}
-      >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
-          <ArrowBackIosNewIcon />
-        </IconButton>
-
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          アイテム詳細
-        </Typography>
-
-        {/* 更新画面 */}
-        <IconButton
-          onClick={() => {
-            useItemStore.getState().setSelectedItem(item);
-            router.push("/item/edit");
-          }}
-          
-          sx={{ color: "#154718" }}
-        >
-          <EditIcon />
-        </IconButton>
-      </Box>
-
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenSnackbar(false)}
-      >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          登録しました
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={openErrorSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenErrorSnackbar(false)}
-      >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      />
 
       {/* --- Main Image --- */}
       <Card
@@ -531,7 +436,7 @@ export default function ItemDetailPage({
               fontSize: "18px",
               boxShadow: "0px 3px 8px rgba(0,0,0,0.1)",
             }}
-            onClick={handleManual}
+            onClick={() => setOpenDialogManual(true)}
           >
             調整確定
           </Button>
@@ -552,7 +457,7 @@ export default function ItemDetailPage({
       >
         <Button
           variant="contained"
-          onClick={handleDecrease}
+          onClick={() => setOpenDialogDecrease(true)}
           sx={{
             backgroundColor: "white",
             color: "#25A56A",
@@ -571,7 +476,7 @@ export default function ItemDetailPage({
 
         <Button
           variant="contained"
-          onClick={handleIncrease}
+          onClick={() => setOpenDialogIncrease(true)}
           sx={{
             backgroundColor: "#25A56A",
             color: "white",
@@ -589,48 +494,57 @@ export default function ItemDetailPage({
         </Button>
       </Box>
 
-      {/* --- 確認ダイアログ --- */}
-      <Dialog open={openDialogIncrease} onClose={handleCancel}>
-        <DialogTitle>確認</DialogTitle>
-        <DialogContent>在庫数を 1 個増やしますか？</DialogContent>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenSnackbar(false)}
+      >
+        <Alert severity="success">更新しました</Alert>
+      </Snackbar>
 
-        <DialogActions>
-          <Button onClick={handleCancel}>キャンセル</Button>
-          <Button
-            variant="contained"
-            onClick={() => handleStockUpdate("increase")}
-          >
-            はい
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error">{error}</Alert>
+      </Snackbar>
 
-      <Dialog open={openDialogDecrease} onClose={handleCancel}>
-        <DialogTitle>確認</DialogTitle>
-        <DialogContent>在庫数を 1 個減らしますか？</DialogContent>
+      <ConfirmDialog
+        open={openDialogIncrease}
+        title="登録確認"
+        message="在庫数を 1 個増やします。"
+        confirmText="増やす"
+        onClose={() => setOpenDialogIncrease(false)}
+        onConfirm={() => {
+          handleStockUpdate("increase");
+          setOpenDialogIncrease(false);
+        }}
+      />
 
-        <DialogActions>
-          <Button onClick={handleCancel}>キャンセル</Button>
-          <Button
-            variant="contained"
-            onClick={() => handleStockUpdate("decrease")}
-          >
-            はい
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={openDialogDecrease}
+        title="登録確認"
+        message="在庫数を 1 個減らします。"
+        confirmText="減らす"
+        onClose={() => setOpenDialogDecrease(false)}
+        onConfirm={() => {
+          handleStockUpdate("decrease");
+          setOpenDialogDecrease(false);
+        }}
+      />
 
-      <Dialog open={openDialogManual} onClose={handleCancel}>
-        <DialogTitle>確認</DialogTitle>
-        <DialogContent>在庫数を{quantity}にしますか？</DialogContent>
-
-        <DialogActions>
-          <Button onClick={handleCancel}>キャンセル</Button>
-          <Button variant="contained" onClick={() => handleSubmit()}>
-            はい
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={openDialogManual}
+        title="登録確認"
+        message={`在庫数を ${quantity} 個にします。`}
+        confirmText="更新する"
+        onClose={() => setOpenDialogManual(false)}
+        onConfirm={() => {
+          handleSubmit();
+          setOpenDialogManual(false);
+        }}
+      />
     </Box>
   );
 }

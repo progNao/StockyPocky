@@ -4,27 +4,23 @@ import { use, useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  IconButton,
-  Button,
   Divider,
   Card,
   Alert,
   Snackbar,
   CardMedia,
-  TextField,
-  CircularProgress,
 } from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useRouter } from "next/navigation";
 import { api } from "@/libs/api/client";
 import axios from "axios";
 import { Item } from "@/app/types";
 import LoadingScreen from "@/components/LoadingScreen";
-import StoreIcon from "@mui/icons-material/Store";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
+import Header from "@/components/Header";
+import PrimaryButton from "@/components/PrimaryButton";
+import CountBox from "@/components/CountBox";
+import ShoppingRecordEditComponent from "@/components/ShoppingRecordEditComponent";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ItemBuyPage({
   params,
@@ -42,6 +38,7 @@ export default function ItemBuyPage({
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const validate = () => {
     if (!quantity || !price || !store) {
@@ -50,13 +47,11 @@ export default function ItemBuyPage({
     return null;
   };
 
-  const handleCount = (
-    setter: (v: number) => void,
-    value: number,
-    diff: number
-  ) => {
-    const newValue = value + diff;
-    if (newValue >= 0) setter(newValue);
+  const toDatetimeLocal = (value: string | Date | undefined) => {
+    if (!value) return "";
+    const date = value instanceof Date ? value : new Date(value);
+    const iso = date.toISOString().slice(0, 23);
+    return iso;
   };
 
   const clear = () => {
@@ -87,42 +82,30 @@ export default function ItemBuyPage({
         store,
         bought_at: toISOStringWithZ(boughtAt),
       });
-      setOpenSnackbar(true);
       clear();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
-        // その他のサーバーエラー
         setError("サーバーエラーが発生しました。");
         setOpenErrorSnackbar(true);
         return;
       }
-      // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
     } finally {
       setLoading(false);
+      setOpenSnackbar(true);
       router.push("/item");
     }
   };
 
   useEffect(() => {
     const fetch = async () => {
-      setLoading(true);
       try {
         const Item = (await api.get(`/items/${unwrapParams.id}`)).data.data;
         setItem(Item);
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err) && err.response) {
-          // その他のサーバーエラー
-          setError("サーバーエラーが発生しました。");
-          setOpenErrorSnackbar(true);
-          return;
-        }
-        // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
-        setError("ネットワークエラーが発生しました。");
+      } catch (err) {
+        setError("アイテム取得エラー:" + err);
         setOpenErrorSnackbar(true);
-      } finally {
-        setLoading(false);
       }
     };
     fetch();
@@ -139,54 +122,7 @@ export default function ItemBuyPage({
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
-        }}
-      >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
-          <ArrowBackIosNewIcon />
-        </IconButton>
-
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          アイテム購入
-        </Typography>
-      </Box>
-
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenSnackbar(false)}
-      >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          購入しました
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={openErrorSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenErrorSnackbar(false)}
-      >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      <Header title="アイテム購入" onBackAction={() => router.back()} />
 
       {/* 画像 */}
       <Card
@@ -229,94 +165,46 @@ export default function ItemBuyPage({
         }}
       >
         {/* 購入数 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            mb: 2,
-            justifyContent: "space-between",
-          }}
-        >
-          <ShoppingCartIcon sx={{ color: "#000", mr: 1 }} />
-          <Typography sx={{ fontSize: 16, flex: 1 }}>購入数</Typography>
-
-          <IconButton
-            onClick={() => handleCount(setQuantity, quantity, -1)}
-            sx={{
-              backgroundColor: "#E9F9ED",
-              color: "#1A7F3B",
-              marginRight: 2,
-            }}
-          >
-            <RemoveIcon />
-          </IconButton>
-
-          <Typography sx={{ fontSize: 20, width: 30, textAlign: "center" }}>
-            {quantity}
-          </Typography>
-
-          <IconButton
-            onClick={() => handleCount(setQuantity, quantity, 1)}
-            sx={{
-              backgroundColor: "#32D26A",
-              color: "#FFFFFF",
-              marginLeft: 2,
-            }}
-          >
-            <AddIcon />
-          </IconButton>
-        </Box>
+        <CountBox
+          label="購入数"
+          value={quantity}
+          onChange={(v: number) => setQuantity(v)}
+        />
 
         <Divider />
 
         {/* 金額 */}
-        <Box sx={{ mb: 2 }}>
-          <Typography sx={{ fontSize: 16, mb: 1 }}>金額</Typography>
-          <TextField
-            fullWidth
-            placeholder="例: 500"
-            type="number"
-            value={price}
-            onChange={(e) =>
-              setPrice(e.target.value === "" ? null : Number(e.target.value))
-            }
-          />
-        </Box>
+        <ShoppingRecordEditComponent
+          label="金額"
+          type="number"
+          value={price ?? ""}
+          onChange={(value: string) => setPrice(Number(value))}
+          placeholder="500"
+          required
+        />
 
         <Divider />
 
         {/* 購入場所 */}
-        <Box sx={{ mt: 2, mb: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <StoreIcon sx={{ mr: 1 }} />
-            <Typography sx={{ fontSize: 16 }}>購入場所</Typography>
-          </Box>
-
-          <TextField
-            fullWidth
-            placeholder="例: Amazon、ドラッグストア"
-            value={store}
-            onChange={(e) => setStore(e.target.value)}
-          />
-        </Box>
+        <ShoppingRecordEditComponent
+          label="購入場所"
+          value={store}
+          onChange={(value: string) => setStore(value)}
+          placeholder="Amazon、ドラッグストア"
+          required
+        />
 
         <Divider />
 
         {/* 購入日時 */}
-        <Box sx={{ mt: 2, mb: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <StoreIcon sx={{ mr: 1 }} />
-            <Typography sx={{ fontSize: 16 }}>購入日時</Typography>
-          </Box>
-
-          <TextField
-            type="datetime-local"
-            fullWidth
-            placeholder="例: 2025/12/12 13:00"
-            value={boughtAt}
-            onChange={(e) => setBoughtAt(e.target.value)}
-          />
-        </Box>
+        <ShoppingRecordEditComponent
+          type="datetime-local"
+          label="購入日時"
+          value={toDatetimeLocal(boughtAt)}
+          onChange={(value: string) => setBoughtAt(value)}
+          placeholder="2025/12/12 13:00"
+          required
+        />
 
         <Divider />
 
@@ -332,26 +220,39 @@ export default function ItemBuyPage({
       </Card>
 
       {/* 購入ボタン */}
-      <Button
-        fullWidth
-        sx={{
-          backgroundColor: "#32D26A",
-          color: "#000",
-          fontSize: 16,
-          fontWeight: 700,
-          borderRadius: "50px",
-          paddingY: 1.5,
-          "&:hover": { backgroundColor: "#29C05F" },
-        }}
-        onClick={handleBuy}
-        disabled={loading}
+      <PrimaryButton
+        onClick={() => setOpen(true)}
+        loading={loading}
+        label="購入"
+      />
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenSnackbar(false)}
       >
-        {loading ? (
-          <CircularProgress size={26} sx={{ color: "white" }} />
-        ) : (
-          "購入する"
-        )}
-      </Button>
+        <Alert severity="success">購入しました</Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error">{error}</Alert>
+      </Snackbar>
+
+      <ConfirmDialog
+        open={open}
+        title="購入確認"
+        message="アイテムを購入します。"
+        confirmText="購入する"
+        onClose={() => setOpen(false)}
+        onConfirm={() => {
+          handleBuy();
+          setOpen(false);
+        }}
+      />
     </Box>
   );
 }

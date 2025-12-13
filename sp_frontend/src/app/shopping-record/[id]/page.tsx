@@ -14,7 +14,6 @@ import { use, useEffect, useState } from "react";
 import { useShoppingRecordStoreStore } from "@/stores/shoppingRecord";
 import { api } from "@/libs/api/client";
 import { ShoppingRecord, Item, ShoppingRecordDisplay } from "@/app/types";
-import axios from "axios";
 import Header from "@/components/Header";
 
 export default function ShoppingRecordDetail({
@@ -56,7 +55,7 @@ export default function ShoppingRecordDetail({
 
   useEffect(() => {
     if (!shoppingRecord) {
-      const fetchItem = async () => {
+      const fetchShoppingRecord = async () => {
         try {
           const resShoppingRecord = (
             await api.get(`/shopping-record/${unwrapParams.id}`)
@@ -66,17 +65,12 @@ export default function ShoppingRecordDetail({
 
           const mergeData = mergeItemData(resShoppingRecord, resItem);
           useShoppingRecordStoreStore.getState().setSelectedItem(mergeData);
-        } catch (err: unknown) {
-          if (axios.isAxiosError(err) && err.response) {
-            setError("サーバーエラーが発生しました。");
-            setOpenErrorSnackbar(true);
-            return;
-          }
-          setError("ネットワークエラーが発生しました。");
+        } catch (err) {
+          setError("購入履歴取得エラー：" + err);
           setOpenErrorSnackbar(true);
         }
       };
-      fetchItem();
+      fetchShoppingRecord();
     }
   }, [shoppingRecord, unwrapParams.id]);
 

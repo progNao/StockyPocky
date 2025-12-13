@@ -21,6 +21,8 @@ import axios from "axios";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import FabButton from "@/components/FabButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { useFormatDate } from "@/hooks/useFormatDate";
 
 export default function ShoppingListPage() {
   const router = useRouter();
@@ -33,17 +35,13 @@ export default function ShoppingListPage() {
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const { formatDate } = useFormatDate();
 
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    const yyyy = d.getFullYear();
-    const MM = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    const ss = String(d.getSeconds()).padStart(2, "0");
-
-    return `${yyyy}/${MM}/${dd} ${hh}:${mm}:${ss}`;
+  const handleDeletePush = (id: number) => {
+    setDeleteTargetId(id);
+    setOpenDelete(true);
   };
 
   const mergeItemData = (
@@ -136,13 +134,25 @@ export default function ShoppingListPage() {
         backgroundColor: "#F2FFF5",
         minHeight: "100vh",
         padding: 3,
+        maxWidth: "100vw",
+        overflowX: "hidden",
       }}
     >
       {/* ヘッダー */}
-      <Header title="買い物リスト" onBackAction={() => router.push("/dashboard")} />
+      <Header
+        title="買い物リスト"
+        onBackAction={() => router.push("/dashboard")}
+      />
 
       {/* アイテムリスト */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          marginBottom: 10,
+        }}
+      >
         {lowStockItemList.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
             買い物リストはありません
@@ -238,7 +248,7 @@ export default function ShoppingListPage() {
                 </IconButton>
 
                 <IconButton
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() => handleDeletePush(item.id)}
                   sx={{ color: "#D9534F" }}
                 >
                   <DeleteIcon />
@@ -249,7 +259,7 @@ export default function ShoppingListPage() {
         )}
       </Box>
 
-      <FabButton onClick={() => router.push("/shopping-list/new")}/>
+      <FabButton onClick={() => router.push("/shopping-list/new")} />
 
       <Footer />
 
@@ -258,9 +268,7 @@ export default function ShoppingListPage() {
         autoHideDuration={2500}
         onClose={() => setOpenSnackbar(false)}
       >
-        <Alert severity="success">
-          更新しました
-        </Alert>
+        <Alert severity="success">更新しました</Alert>
       </Snackbar>
 
       <Snackbar
@@ -268,10 +276,21 @@ export default function ShoppingListPage() {
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
       >
-        <Alert severity="error">
-          {error}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={openDelete}
+        title="削除確認"
+        message="買い物リストを削除します。"
+        confirmText="削除する"
+        variant="danger"
+        onClose={() => setOpenDelete(false)}
+        onConfirm={() => {
+          handleDelete(deleteTargetId!);
+          setOpenDelete(false);
+        }}
+      />
     </Box>
   );
 }

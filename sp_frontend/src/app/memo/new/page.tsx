@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import FieldInput from "@/components/FieldInput";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import PrimaryButton from "@/components/PrimaryButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function MemoNewPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function MemoNewPage() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const validate = () => {
     if (!title) {
@@ -120,7 +122,11 @@ export default function MemoNewPage() {
       />
 
       {/* 登録ボタン */}
-      <PrimaryButton onClick={handleCreate} loading={loading} label="登録" />
+      <PrimaryButton
+        onClick={() => setOpen(true)}
+        loading={loading}
+        label="登録"
+      />
 
       <Snackbar
         open={openSnackbar}
@@ -137,6 +143,18 @@ export default function MemoNewPage() {
       >
         <Alert severity="error">{error}</Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={open}
+        title="登録確認"
+        message="メモを登録します。"
+        confirmText="登録する"
+        onClose={() => setOpen(false)}
+        onConfirm={() => {
+          handleCreate();
+          setOpen(false);
+        }}
+      />
     </Box>
   );
 }

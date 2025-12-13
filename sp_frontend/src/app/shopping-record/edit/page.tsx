@@ -239,7 +239,7 @@ export default function ShoppingRecordEdit() {
         autoHideDuration={2500}
         onClose={() => setOpenSnackbar(false)}
       >
-        <Alert severity="success" sx={{ width: "100%" }}>
+        <Alert severity="success">
           更新しました
         </Alert>
       </Snackbar>
@@ -249,7 +249,7 @@ export default function ShoppingRecordEdit() {
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
       >
-        <Alert severity="error" sx={{ width: "100%" }}>
+        <Alert severity="error">
           {error}
         </Alert>
       </Snackbar>

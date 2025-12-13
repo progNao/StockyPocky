@@ -5,6 +5,7 @@ import { MenuItem, TextField, Typography } from "@mui/material";
 type Option = {
   id: number;
   name: string;
+  icon?: string;
 };
 
 type SelectFieldInputProps = {
@@ -49,6 +50,7 @@ export default function SelectFieldInput({
       >
         {options.map((c) => (
           <MenuItem key={c.id} value={c.id}>
+            {c.icon && ` ${c.icon}`}
             {c.name}
           </MenuItem>
         ))}

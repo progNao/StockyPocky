@@ -16,11 +16,9 @@ export default function ShoppingRecordPage() {
   const [error, setError] = useState("");
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
 
-  // ヘルパー：渡した日付の「その週の月曜（ローカル時間・00:00）」を返す
   const getStartOfWeekMonday = (date: Date) => {
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
-    // (getDay() + 6) % 7 : Mon->0, Tue->1, ..., Sun->6
     const dayIndex = (d.getDay() + 6) % 7;
     d.setDate(d.getDate() - dayIndex);
     return d;
@@ -28,28 +26,19 @@ export default function ShoppingRecordPage() {
 
   const weekly = useMemo(() => {
     const now = new Date();
-    // 今週の月曜（ローカルの 00:00）
     const mondayThisWeek = getStartOfWeekMonday(now);
-
-    // 先週の月曜（今週の月曜 - 7日）
     const mondayLastWeek = new Date(mondayThisWeek);
     mondayLastWeek.setDate(mondayThisWeek.getDate() - 7);
     mondayLastWeek.setHours(0, 0, 0, 0);
-
-    // 先週の日曜 = 今週の月曜の前日の 23:59:59.999
     const sundayLastWeek = new Date(mondayThisWeek);
     sundayLastWeek.setDate(mondayThisWeek.getDate() - 1);
     sundayLastWeek.setHours(23, 59, 59, 999);
-
     const thisWeek: ShoppingRecordDisplay[] = [];
     const lastWeek: ShoppingRecordDisplay[] = [];
     const older: ShoppingRecordDisplay[] = [];
 
     items.forEach((item) => {
-      // bought_at は ISO 文字列 ("2025-12-08T14:17:52.941Z") と仮定
       const date = new Date(item.bought_at);
-
-      // 比較は ms 単位（UTC ↔ ローカルは Date オブジェクトが調整する）
       if (date >= mondayThisWeek && date <= now) {
         thisWeek.push(item);
       } else if (date >= mondayLastWeek && date <= sundayLastWeek) {
@@ -62,21 +51,15 @@ export default function ShoppingRecordPage() {
     return { thisWeek, lastWeek, older };
   }, [items]);
 
-  // ==============================
-  // 月ごと分類
-  // ==============================
   const monthly = useMemo(() => {
     const now = new Date();
 
-    // 今月
     const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const firstDayNextMonth = new Date(
       now.getFullYear(),
       now.getMonth() + 1,
       1
     );
-
-    // 先月
     const firstDayLastMonth = new Date(
       now.getFullYear(),
       now.getMonth() - 1,
@@ -139,12 +122,9 @@ export default function ShoppingRecordPage() {
   useEffect(() => {
     const fetchShoppingRecord = async () => {
       try {
-        // 購入履歴一覧取得
         const res = (await api.get("/shopping-records")).data.data;
-        // アイテム取得
         const resItems = (await api.get("/items")).data.data;
 
-        // 表示アイテムの整形
         const mergeData = mergeItemData(res, resItems);
         setItems(mergeData);
       } catch (err) {
@@ -217,8 +197,8 @@ export default function ShoppingRecordPage() {
           {mode === "week" ? (
             <>
               <ShoppingRecordCard title="今週" list={weekly.thisWeek} />
-              <ShoppingRecordCard title="今週" list={weekly.lastWeek} />
-              <ShoppingRecordCard title="今週" list={weekly.older} />
+              <ShoppingRecordCard title="先週" list={weekly.lastWeek} />
+              <ShoppingRecordCard title="過去" list={weekly.older} />
             </>
           ) : (
             <>

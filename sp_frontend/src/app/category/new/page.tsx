@@ -7,6 +7,7 @@ import axios from "axios";
 import Header from "@/components/Header";
 import FieldInput from "@/components/FieldInput";
 import PrimaryButton from "@/components/PrimaryButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function CategoryNewPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function CategoryNewPage() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const validate = () => {
     if (!name) {
@@ -66,7 +68,10 @@ export default function CategoryNewPage() {
       }}
     >
       {/* ヘッダー */}
-      <Header title="カテゴリ登録" onBackAction={() => router.push("/category")} />
+      <Header
+        title="カテゴリ登録"
+        onBackAction={() => router.push("/category")}
+      />
 
       {/* カテゴリ名 */}
       <FieldInput
@@ -86,7 +91,11 @@ export default function CategoryNewPage() {
       />
 
       {/* 登録ボタン */}
-      <PrimaryButton onClick={handleCreate} loading={loading} label="登録" />
+      <PrimaryButton
+        onClick={() => setOpen(true)}
+        loading={loading}
+        label="登録"
+      />
 
       <Snackbar
         open={openSnackbar}
@@ -103,6 +112,18 @@ export default function CategoryNewPage() {
       >
         <Alert severity="error">{error}</Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={open}
+        title="登録確認"
+        message="カテゴリを登録します。"
+        confirmText="登録する"
+        onClose={() => setOpen(false)}
+        onConfirm={() => {
+          handleCreate();
+          setOpen(false);
+        }}
+      />
     </Box>
   );
 }

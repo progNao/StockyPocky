@@ -11,6 +11,7 @@ import FieldInput from "@/components/FieldInput";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import DangerButton from "@/components/DangerButton";
 import PrimaryButton from "@/components/PrimaryButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function MemoEditPage() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function MemoEditPage() {
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
 
   const validate = () => {
     if (!title) {
@@ -153,11 +156,11 @@ export default function MemoEditPage() {
       />
 
       {/* 更新ボタン */}
-      <PrimaryButton onClick={handleUpdate} loading={loading} label="更新" />
+      <PrimaryButton onClick={() => setOpen(true)} loading={loading} label="更新" />
 
       {/* 削除ボタン */}
       <DangerButton
-        onClick={handleDelete}
+        onClick={() => setOpenDelete(true)}
         loading={deleteLoading}
         label="削除"
       />
@@ -177,6 +180,30 @@ export default function MemoEditPage() {
       >
         <Alert severity="error">{error}</Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={open}
+        title="更新確認"
+        message="メモを更新します。"
+        confirmText="更新する"
+        onClose={() => setOpen(false)}
+        onConfirm={() => {
+          handleUpdate();
+          setOpen(false);
+        }}
+      />
+      <ConfirmDialog
+        open={openDelete}
+        title="削除確認"
+        message="メモを削除します。"
+        confirmText="削除する"
+        variant="danger"
+        onClose={() => setOpenDelete(false)}
+        onConfirm={() => {
+          handleDelete();
+          setOpenDelete(false);
+        }}
+      />
     </Box>
   );
 }

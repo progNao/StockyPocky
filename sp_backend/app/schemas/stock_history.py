@@ -6,8 +6,8 @@ from datetime import datetime
 class StockHistoryResponse(BaseModel):
   id: int
   change: int
-  reason: str
-  memo: str
+  reason: Optional[str] = None
+  memo: Optional[str] = None
   user_id: UUID
   item_id: int
   created_at: datetime

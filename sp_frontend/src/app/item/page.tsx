@@ -7,20 +7,15 @@ import {
   TextField,
   InputAdornment,
   IconButton,
-  Chip,
   Card,
   CardContent,
   CardMedia,
-  Fab,
   Snackbar,
   Alert,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import AddIcon from "@mui/icons-material/Add";
 import { useRouter } from "next/navigation";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import Inventory2Icon from "@mui/icons-material/Inventory2";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { Category, Item, ItemListDisplay, Stock } from "../types";
 import { api } from "@/libs/api/client";
@@ -30,6 +25,9 @@ import { useItemStore } from "@/stores/item";
 import Footer from "@/components/Footer";
 import PriceCheckIcon from "@mui/icons-material/PriceCheck";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import Header from "@/components/Header";
+import FabButton from "@/components/FabButton";
+import ItemFilterChips from "@/components/ItemFilterChip";
 
 export default function ItemsPage() {
   const router = useRouter();
@@ -45,6 +43,12 @@ export default function ItemsPage() {
   );
   const [selectedCategoryName, setSelectedCategoryName] = useState("");
 
+  const isLowStock = (stock: number, threshold: number) => {
+    const ratio = stock / threshold;
+    if (ratio <= 0.2) return true;
+    return false;
+  };
+
   const filteredItems = itemList
     .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
     .filter((item) => {
@@ -58,13 +62,6 @@ export default function ItemsPage() {
       }
       return true;
     });
-
-  const isLowStock = (stock: number, threshold: number) => {
-    const ratio = stock / threshold;
-    if (ratio <= 0.2) return true;
-
-    return false;
-  };
 
   const mergeItemData = (
     dataItems: Item[],
@@ -93,33 +90,28 @@ export default function ItemsPage() {
   };
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchItem = async () => {
       try {
         setLoading(true);
-        // アイテム一覧取得
         const resItems = await api.get("/items");
         const dataItems = resItems.data.data;
-        // カテゴリ一覧取得
         const resCategories = await api.get("/categories");
         const dataCategories = resCategories.data.data;
         setCategories(dataCategories);
-        // 在庫一覧取得
         const resStocks = await api.get("/stocks");
         const dataStocks = resStocks.data.data;
 
-        // 表示アイテムの整形
         const mergeData = mergeItemData(dataItems, dataCategories, dataStocks);
         setItemList(mergeData);
       } catch (err) {
-        setError("データ取得エラー：" + err);
+        setError("アイテム取得エラー：" + err);
         setOpenErrorSnackbar(true);
       } finally {
-        // 全て整形し終わってからロード解除
         setLoading(false);
       }
     };
 
-    fetchAll();
+    fetchItem();
   }, []);
 
   if (loading) return <LoadingScreen />;
@@ -135,60 +127,23 @@ export default function ItemsPage() {
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
-        }}
-      >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton
-          onClick={() => router.push("/dashboard")}
-          sx={{ color: "#154718" }}
-        >
-          <ArrowBackIosNewIcon />
-        </IconButton>
-
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          アイテムリスト
-        </Typography>
-      </Box>
-
-      <Snackbar
-        open={openErrorSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenErrorSnackbar(false)}
-      >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      <Header
+        title="アイテムリスト"
+        onBackAction={() => router.push("/dashboard")}
+      />
 
       {/* 🔍 検索欄 */}
       <TextField
         placeholder="アイテムを検索"
-        fullWidth
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        fullWidth
         InputProps={{
           sx: {
-            backgroundColor: "white",
             borderRadius: "40px",
-            marginBottom: 2,
+            backgroundColor: "white",
             height: 48,
+            marginBottom: 2,
           },
           startAdornment: (
             <InputAdornment position="start">
@@ -199,91 +154,17 @@ export default function ItemsPage() {
       />
 
       {/* フィルタボタン */}
-      <Box sx={{ display: "flex", gap: 1.5, marginBottom: 3 }}>
-        {/* カテゴリ */}
-        {categories.map((cat) => (
-          <Chip
-            icon={
-              <CategoryIcon2
-                sx={{
-                  color: selectedCategoryId === cat.id ? "white" : "#32D26A",
-                }}
-              />
-            }
-            key={cat.id}
-            label={cat.name}
-            onClick={() => {
-              setFilter(selectedCategoryId === cat.id ? "all" : "category");
-              setSelectedCategoryId(
-                selectedCategoryId === cat.id ? null : cat.id
-              );
-              setSelectedCategoryName(cat.name);
-            }}
-            sx={{
-              height: 36,
-              fontSize: 14,
-              fontWeight: 700,
-              borderRadius: "18px",
-              paddingX: 1,
-              backgroundColor:
-                selectedCategoryId === cat.id ? "#32D26A" : "#ffffff",
-              color: selectedCategoryId === cat.id ? "white" : "#333",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-              "& .MuiChip-icon": {
-                color: selectedCategoryId === cat.id ? "white" : "#32D26A",
-              },
-            }}
-          />
-        ))}
-
-        {/* 低在庫 */}
-        <Chip
-          icon={
-            <Inventory2Icon
-              sx={{ color: filter === "low" ? "white" : "#32D26A" }}
-            />
-          }
-          label="低在庫"
-          onClick={() => setFilter(filter === "low" ? "all" : "low")}
-          sx={{
-            height: 40,
-            fontSize: 15,
-            fontWeight: 700,
-            borderRadius: "20px",
-            paddingX: 1,
-            backgroundColor: filter === "low" ? "#32D26A" : "#ffffff",
-            color: filter === "low" ? "white" : "#333",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-            "& .MuiChip-icon": {
-              color: filter === "low" ? "white" : "#32D26A",
-            },
-          }}
-        />
-
-        {/* お気に入り */}
-        <Chip
-          icon={
-            <FavoriteBorderIcon
-              sx={{ color: filter === "favorite" ? "white" : "#32D26A" }}
-            />
-          }
-          label="お気に入り"
-          onClick={() => setFilter(filter === "favorite" ? "all" : "favorite")}
-          sx={{
-            height: 40,
-            fontSize: 15,
-            fontWeight: 700,
-            borderRadius: "20px",
-            paddingX: 1,
-            backgroundColor: filter === "favorite" ? "#32D26A" : "#ffffff",
-            color: filter === "favorite" ? "white" : "#333",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-            "& .MuiChip-icon": {
-              color: filter === "favorite" ? "white" : "#32D26A",
-            },
-          }}
-        />
-      </Box>
+      <ItemFilterChips
+        categories={categories}
+        selectedCategoryId={selectedCategoryId}
+        filter={filter}
+        CategoryIcon={CategoryIcon2}
+        onChangeFilter={(f) => setFilter(f)}
+        onSelectCategory={(cat) => {
+          setSelectedCategoryId(cat ? cat.id : null);
+          setSelectedCategoryName(cat ? cat.name : "");
+        }}
+      />
 
       {/* アイテムリスト */}
       <Box
@@ -296,7 +177,7 @@ export default function ItemsPage() {
       >
         {filteredItems.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
-            一致するアイテムがありません
+            アイテムはありません
           </Typography>
         ) : (
           filteredItems.map((item) => (
@@ -384,23 +265,19 @@ export default function ItemsPage() {
         )}
       </Box>
 
-      {/* 右下の追加ボタン */}
-      <Fab
-        color="success"
-        onClick={() => router.push("/item/new")}
-        sx={{
-          position: "fixed",
-          bottom: 40,
-          right: 30,
-          backgroundColor: "#3ECF8E",
-          marginBottom: 10,
-        }}
-      >
-        <AddIcon sx={{ fontSize: 32 }} />
-      </Fab>
+      <FabButton onClick={() => router.push("/item/new")} />
 
-      {/* 下部ナビバー（仮） */}
       <Footer />
+
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

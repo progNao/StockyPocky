@@ -22,6 +22,7 @@ import Footer from "@/components/Footer";
 import { useMemoStore } from "@/stores/memo";
 import Header from "@/components/Header";
 import FabButton from "@/components/FabButton";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 export default function MemoPage() {
   const router = useRouter();
@@ -73,6 +74,8 @@ export default function MemoPage() {
         backgroundColor: "#F2FFF5",
         minHeight: "100vh",
         padding: 3,
+        maxWidth: "100vw",
+        overflowX: "hidden",
       }}
     >
       {/* ヘッダー */}
@@ -149,7 +152,14 @@ export default function MemoPage() {
       </Box>
 
       {/* メモ一覧 */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          marginBottom: 10,
+        }}
+      >
         {filteredMemos.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
             メモはありません
@@ -205,19 +215,39 @@ export default function MemoPage() {
                 {m.content}
               </Typography>
 
-              {/* Tags */}
-              <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
-                {m.tags.map((t) => (
-                  <Chip
-                    key={t}
-                    label={`#${t}`}
-                    sx={{
-                      backgroundColor: "#F0F4F0",
-                      color: "#154718",
-                      fontSize: 12,
-                    }}
-                  />
-                ))}
+              {/* Tags + Arrow */}
+              <Box
+                sx={{
+                  mt: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                {/* Tags */}
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  {m.tags.map((t) => (
+                    <Chip
+                      key={t}
+                      label={`#${t}`}
+                      sx={{
+                        backgroundColor: "#F0F4F0",
+                        color: "#154718",
+                        fontSize: 12,
+                      }}
+                    />
+                  ))}
+                </Box>
+
+                {/* Arrow */}
+                <ChevronRightIcon
+                  sx={{
+                    color: "#B0B0B0",
+                    fontSize: 26,
+                    ml: 1,
+                    flexShrink: 0,
+                  }}
+                />
               </Box>
             </Card>
           ))

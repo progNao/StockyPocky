@@ -3,14 +3,24 @@
 import { Box, IconButton, Typography } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import EditIcon from "@mui/icons-material/Edit";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 type Header = {
   title: string;
   onBackAction: () => void;
   onEditPage?: () => void;
+  onFavoriteAction?: () => void;
+  isFavorite?: boolean;
 };
 
-export default function Header({ title, onBackAction, onEditPage }: Header) {
+export default function Header({
+  title,
+  onBackAction,
+  onEditPage,
+  onFavoriteAction,
+  isFavorite,
+}: Header) {
   return (
     <Box
       sx={{
@@ -42,6 +52,17 @@ export default function Header({ title, onBackAction, onEditPage }: Header) {
       {onEditPage && (
         <IconButton onClick={onEditPage} sx={{ color: "#154718" }}>
           <EditIcon />
+        </IconButton>
+      )}
+      {onFavoriteAction && (
+        <IconButton
+          onClick={onFavoriteAction}
+          sx={{
+            color: isFavorite ? "red" : "gray",
+            transition: "0.2s",
+          }}
+        >
+          {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </IconButton>
       )}
     </Box>

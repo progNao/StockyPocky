@@ -1,28 +1,23 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import { useEffect, useState } from "react";
 import {
   Box,
-  Typography,
-  TextField,
-  IconButton,
-  MenuItem,
-  Button,
   Snackbar,
   Alert,
-  CircularProgress,
 } from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
 import { useRouter } from "next/navigation";
 import { api } from "@/libs/api/client";
 import axios from "axios";
 import { Category } from "@/app/types";
 import { uploadImage } from "@/libs/query/imageup";
 import imageCompression from "browser-image-compression";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import Header from "@/components/Header";
+import PrimaryButton from "@/components/PrimaryButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import FieldInput from "@/components/FieldInput";
+import SelectFieldInput from "@/components/SelectFieldInput";
+import CountBox from "@/components/CountBox";
+import ImagePicker from "@/components/ImagePicker";
 
 export default function ItemNewPage() {
   const router = useRouter();
@@ -43,10 +38,11 @@ export default function ItemNewPage() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const validate = () => {
-    if (!name || !categoryId || !defaultQuantity) {
-      return "アイテム名、カテゴリ、初期在庫数は必須です。";
+    if (!name || !categoryId || !location) {
+      return "アイテム名、カテゴリ、場所は必須です。";
     }
     return null;
   };
@@ -66,8 +62,7 @@ export default function ItemNewPage() {
     setLocation("");
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageChange = async (file: File) => {
     if (!file) return;
 
     const options = {
@@ -78,12 +73,8 @@ export default function ItemNewPage() {
 
     try {
       const compressed = await imageCompression(file, options);
-
-      // プレビュー用のURL
       const preview = URL.createObjectURL(compressed);
       setPreviewUrl(preview);
-
-      // Firebase Storage にアップロードする用の File
       setImageFile(compressed);
     } catch (err) {
       console.error("画像圧縮エラー:", err);
@@ -149,15 +140,6 @@ export default function ItemNewPage() {
     fetchCategories();
   }, []);
 
-  const handleCount = (
-    setter: (v: number) => void,
-    value: number,
-    diff: number
-  ) => {
-    const newValue = value + diff;
-    if (newValue >= 0) setter(newValue);
-  };
-
   return (
     <Box
       sx={{
@@ -167,52 +149,101 @@ export default function ItemNewPage() {
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
+      <Header
+        title="アイテム登録"
+        onBackAction={() => router.push("/item")}
+        onFavoriteAction={() => {
+          setIsFavorite(!isFavorite);
         }}
-      >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
-          <ArrowBackIosNewIcon />
-        </IconButton>
+        isFavorite={isFavorite}
+      />
 
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          アイテム登録
-        </Typography>
+      {/* アイテム名 */}
+      <FieldInput
+        label="アイテム名"
+        value={name}
+        onChange={setName}
+        placeholder="トイレットペーパー"
+        required
+      />
 
-        {/* お気に入りアイコン */}
-        <IconButton
-          onClick={() => setIsFavorite(!isFavorite)}
-          sx={{
-            color: isFavorite ? "red" : "gray",
-            transition: "0.2s",
-          }}
-        >
-          {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-        </IconButton>
-      </Box>
+      {/* カテゴリ */}
+      <SelectFieldInput
+        label="カテゴリ"
+        value={categoryId}
+        onChange={setCategoryId}
+        placeholder="カテゴリを選択"
+        options={categories}
+        required
+      />
+
+      {/* ブランド名 */}
+      <FieldInput
+        label="ブランド名"
+        value={brand}
+        onChange={setBrand}
+        placeholder="カインズ"
+      />
+
+      {/* 単位 */}
+      <FieldInput
+        label="単位"
+        value={unit}
+        onChange={setUnit}
+        placeholder="個"
+      />
+
+      {/* 場所 */}
+      <FieldInput
+        label="場所"
+        value={location}
+        onChange={setLocation}
+        placeholder="キッチンの棚"
+        required
+      />
+
+      {/* 画像 */}
+      <ImagePicker
+        previewUrl={previewUrl}
+        onChange={handleImageChange}
+      />
+
+      {/* 初期在庫数 */}
+      <CountBox
+        label="初期在庫数"
+        value={defaultQuantity}
+        onChange={(v: number) => setDefaultQuantity(v)}
+      />
+
+      {/* 閾値 */}
+      <CountBox
+        label="閾値"
+        value={threshold}
+        onChange={(v: number) => setThreshold(v)}
+      />
+
+      {/* メモ */}
+      <FieldInput
+        label="メモ（任意）"
+        value={notes}
+        onChange={setNotes}
+        placeholder="メモを入力"
+        large
+      />
+
+      {/* 登録ボタン */}
+      <PrimaryButton
+        onClick={() => setOpen(true)}
+        loading={loading}
+        label="登録"
+      />
 
       <Snackbar
         open={openSnackbar}
         autoHideDuration={2500}
         onClose={() => setOpenSnackbar(false)}
       >
-        <Alert severity="success" sx={{ width: "100%" }}>
+        <Alert severity="success">
           登録しました
         </Alert>
       </Snackbar>
@@ -222,305 +253,22 @@ export default function ItemNewPage() {
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
       >
-        <Alert severity="error" sx={{ width: "100%" }}>
+        <Alert severity="error">
           {error}
         </Alert>
       </Snackbar>
 
-      {/* アイテム名 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        アイテム名 *
-      </Typography>
-      <TextField
-        fullWidth
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="例：トイレットペーパー"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
+      <ConfirmDialog
+        open={open}
+        title="登録確認"
+        message="アイテムを登録します。"
+        confirmText="登録する"
+        onClose={() => setOpen(false)}
+        onConfirm={() => {
+          handleCreate();
+          setOpen(false);
         }}
-        sx={{ marginBottom: 3 }}
       />
-
-      {/* カテゴリ */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        カテゴリ *
-      </Typography>
-      <TextField
-        select
-        fullWidth
-        value={categoryId}
-        onChange={(e) => setCategoryId(Number(e.target.value))}
-        placeholder="カテゴリを選択"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      >
-        {categories.map((c) => (
-          <MenuItem key={c.id} value={c.id}>
-            {c.icon}
-            {c.name}
-          </MenuItem>
-        ))}
-      </TextField>
-
-      {/* ブランド名 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        ブランド名
-      </Typography>
-      <TextField
-        fullWidth
-        value={brand}
-        onChange={(e) => setBrand(e.target.value)}
-        placeholder="例：カインズ"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* 単位 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>単位</Typography>
-      <TextField
-        fullWidth
-        value={unit}
-        onChange={(e) => setUnit(e.target.value)}
-        placeholder="例：個"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* 場所 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>場所</Typography>
-      <TextField
-        fullWidth
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        placeholder="例：キッチンの棚"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* 画像 */}
-      <Box sx={{ marginBottom: 3 }}>
-        <Button
-          variant="contained"
-          component="label"
-          sx={{
-            backgroundColor: "#32D26A",
-            borderRadius: "20px",
-            fontWeight: 700,
-            paddingY: 1.5,
-          }}
-        >
-          画像を選択する
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={handleImageChange}
-          />
-        </Button>
-
-        {previewUrl && (
-          <Box
-            sx={{
-              marginTop: 2,
-              width: "200px", // 👈 固定幅に変更
-              height: "200px",
-              borderRadius: "16px",
-              overflow: "hidden",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              mx: "auto", // 👈 中央寄せ
-            }}
-          >
-            <img
-              src={previewUrl}
-              alt="preview"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover", // 👈 トリミングして綺麗に見せる
-                display: "block",
-              }}
-            />
-          </Box>
-        )}
-      </Box>
-
-      {/* 初期在庫数 */}
-      <Box
-        sx={{
-          backgroundColor: "white",
-          padding: 2,
-          borderRadius: "20px",
-          marginBottom: 3,
-          boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-          初期在庫数
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-end",
-          }}
-        >
-          <IconButton
-            onClick={() => handleCount(setDefaultQuantity, defaultQuantity, -1)}
-            sx={{
-              backgroundColor: "#E9F9ED",
-              color: "#1A7F3B",
-              marginRight: 4,
-            }}
-          >
-            <RemoveIcon />
-          </IconButton>
-
-          <Typography sx={{ fontSize: 22, fontWeight: 700 }}>
-            {defaultQuantity}
-          </Typography>
-
-          <IconButton
-            onClick={() => handleCount(setDefaultQuantity, defaultQuantity, 1)}
-            sx={{
-              backgroundColor: "#32D26A",
-              color: "#FFFFFF",
-              marginLeft: 4,
-            }}
-          >
-            <AddIcon />
-          </IconButton>
-        </Box>
-      </Box>
-
-      {/* 閾値 */}
-      <Box
-        sx={{
-          backgroundColor: "white",
-          padding: 2,
-          borderRadius: "20px",
-          marginBottom: 3,
-          boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>閾値</Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-end",
-          }}
-        >
-          <IconButton
-            onClick={() => handleCount(setThreshold, threshold, -1)}
-            sx={{
-              backgroundColor: "#E9F9ED",
-              color: "#1A7F3B",
-              marginRight: 4,
-            }}
-          >
-            <RemoveIcon />
-          </IconButton>
-
-          <Typography sx={{ fontSize: 22, fontWeight: 700 }}>
-            {threshold}
-          </Typography>
-
-          <IconButton
-            onClick={() => handleCount(setThreshold, threshold, 1)}
-            sx={{
-              backgroundColor: "#32D26A",
-              color: "#FFFFFF",
-              marginLeft: 4,
-            }}
-          >
-            <AddIcon />
-          </IconButton>
-        </Box>
-      </Box>
-
-      {/* メモ */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        メモ（任意）
-      </Typography>
-      <TextField
-        fullWidth
-        multiline
-        minRows={3}
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="メモを入力"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 1,
-          },
-        }}
-        sx={{ marginBottom: 4 }}
-      />
-
-      {/* 登録ボタン */}
-      <Button
-        fullWidth
-        variant="contained"
-        sx={{
-          backgroundColor: "#32D26A",
-          paddingY: 2,
-          borderRadius: "40px",
-          fontWeight: 700,
-          fontSize: "18px",
-          color: "#FFFFFF",
-          boxShadow: "0 8px 16px rgba(50,210,106,0.4)",
-          "&:hover": {
-            backgroundColor: "#29C05F",
-          },
-        }}
-        onClick={handleCreate}
-        disabled={loading}
-      >
-        {loading ? (
-          <CircularProgress size={26} sx={{ color: "white" }} />
-        ) : (
-          "登録する"
-        )}
-      </Button>
     </Box>
   );
 }

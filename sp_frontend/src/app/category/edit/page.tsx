@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import FieldInput from "@/components/FieldInput";
 import PrimaryButton from "@/components/PrimaryButton";
 import DangerButton from "@/components/DangerButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function CategoryEditPage() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function CategoryEditPage() {
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
 
   const validate = () => {
     if (!name) {
@@ -76,7 +79,6 @@ export default function CategoryEditPage() {
       setOpenErrorSnackbar(true);
     } finally {
       setDeleteLoading(false);
-      setOpenSnackbar(true);
     }
   };
 
@@ -104,7 +106,10 @@ export default function CategoryEditPage() {
       }}
     >
       {/* ヘッダー */}
-      <Header title="カテゴリ更新" onBackAction={() => router.push("/category")} />
+      <Header
+        title="カテゴリ更新"
+        onBackAction={() => router.push("/category")}
+      />
 
       {/* カテゴリ名 */}
       <FieldInput
@@ -124,11 +129,15 @@ export default function CategoryEditPage() {
       />
 
       {/* 更新ボタン */}
-      <PrimaryButton onClick={handleUpdate} loading={loading} label="更新" />
+      <PrimaryButton
+        onClick={() => setOpen(true)}
+        loading={loading}
+        label="更新"
+      />
 
       {/* 削除ボタン */}
       <DangerButton
-        onClick={handleDelete}
+        onClick={() => setOpenDelete(true)}
         loading={deleteLoading}
         label="削除"
       />
@@ -148,6 +157,30 @@ export default function CategoryEditPage() {
       >
         <Alert severity="error">{error}</Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={open}
+        title="更新確認"
+        message="カテゴリを更新します。"
+        confirmText="更新する"
+        onClose={() => setOpen(false)}
+        onConfirm={() => {
+          handleUpdate();
+          setOpen(false);
+        }}
+      />
+      <ConfirmDialog
+        open={openDelete}
+        title="削除確認"
+        message="カテゴリを削除します。"
+        confirmText="削除する"
+        variant="danger"
+        onClose={() => setOpenDelete(false)}
+        onConfirm={() => {
+          handleDelete();
+          setOpenDelete(false);
+        }}
+      />
     </Box>
   );
 }

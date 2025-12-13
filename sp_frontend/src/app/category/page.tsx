@@ -52,10 +52,15 @@ export default function CategoryPage() {
         backgroundColor: "#F2FFF5",
         minHeight: "100vh",
         padding: 3,
+        maxWidth: "100vw",
+        overflowX: "hidden",
       }}
     >
       {/* ヘッダー */}
-      <Header title="カテゴリリスト" onBackAction={() => router.push("/dashboard")} />
+      <Header
+        title="カテゴリリスト"
+        onBackAction={() => router.push("/dashboard")}
+      />
 
       {/* 🔍 検索欄 */}
       <TextField
@@ -80,7 +85,14 @@ export default function CategoryPage() {
       />
 
       {/* カテゴリ一覧 */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          marginBottom: 10,
+        }}
+      >
         {filteredCategories.length === 0 ? (
           <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
             カテゴリはありません
@@ -132,7 +144,7 @@ export default function CategoryPage() {
         )}
       </Box>
 
-      <FabButton onClick={() => router.push("/category/new")}/>
+      <FabButton onClick={() => router.push("/category/new")} />
 
       <Footer />
 
@@ -141,9 +153,7 @@ export default function CategoryPage() {
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
       >
-        <Alert severity="error">
-          {error}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       </Snackbar>
     </Box>
   );

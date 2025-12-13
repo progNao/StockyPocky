@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import PrimaryButton from "@/components/PrimaryButton";
 import CountBox from "@/components/CountBox";
 import SelectFieldInput from "@/components/SelectFieldInput";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ShoppingListNewPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function ShoppingListNewPage() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const validate = () => {
     if (itemId == 0) {
@@ -105,7 +107,11 @@ export default function ShoppingListNewPage() {
       />
 
       {/* 登録ボタン */}
-      <PrimaryButton onClick={handleCreate} loading={loading} label="登録" />
+      <PrimaryButton
+        onClick={() => setOpen(true)}
+        loading={loading}
+        label="登録"
+      />
 
       <Snackbar
         open={openSnackbar}
@@ -122,6 +128,18 @@ export default function ShoppingListNewPage() {
       >
         <Alert severity="error">{error}</Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={open}
+        title="登録確認"
+        message="買い物リストを登録します。"
+        confirmText="登録する"
+        onClose={() => setOpen(false)}
+        onConfirm={() => {
+          handleCreate();
+          setOpen(false);
+        }}
+      />
     </Box>
   );
 }

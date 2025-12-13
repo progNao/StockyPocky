@@ -1,29 +1,23 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  IconButton,
-  MenuItem,
-  Button,
-  Snackbar,
-  Alert,
-  CircularProgress,
-} from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import { Box, Snackbar, Alert } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { api } from "@/libs/api/client";
 import axios from "axios";
 import { Category } from "@/app/types";
 import { uploadImage } from "@/libs/query/imageup";
 import imageCompression from "browser-image-compression";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { useItemStore } from "@/stores/item";
 import DangerButton from "@/components/DangerButton";
+import { ref, deleteObject } from "firebase/storage";
+import { storage } from "@/libs/firebase";
+import Header from "@/components/Header";
+import FieldInput from "@/components/FieldInput";
+import SelectFieldInput from "@/components/SelectFieldInput";
+import ImagePicker from "@/components/ImagePicker";
+import PrimaryButton from "@/components/PrimaryButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ItemEditPage() {
   const router = useRouter();
@@ -47,8 +41,15 @@ export default function ItemEditPage() {
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let changeFlg = false;
+
+  const deleteImageByUrl = async (imageUrl: string) => {
+    const imageRef = ref(storage, imageUrl);
+    await deleteObject(imageRef);
+  };
 
   const validate = () => {
     if (!name || !categoryId) {
@@ -57,17 +58,14 @@ export default function ItemEditPage() {
     return null;
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (file: File) => {
     changeFlg = true;
-    const file = e.target.files?.[0];
     if (!file) {
       setPreviewUrl(imageUrl);
       return;
     }
-
     setImageFile(file);
     setImageUrl(URL.createObjectURL(file));
-
     const options = {
       maxSizeMB: 1,
       maxWidthOrHeight: 800,
@@ -76,12 +74,8 @@ export default function ItemEditPage() {
 
     try {
       const compressed = await imageCompression(file, options);
-
-      // プレビュー用のURL
       const preview = URL.createObjectURL(compressed);
       setPreviewUrl(preview);
-
-      // Firebase Storage にアップロードする用の File
       setImageFile(compressed);
     } catch (err) {
       console.error("画像圧縮エラー:", err);
@@ -108,20 +102,19 @@ export default function ItemEditPage() {
         is_favorite: isFavorite,
         category_id: categoryId,
       });
-      setOpenSnackbar(true);
-      router.push("/item");
+      await deleteImageByUrl(item ? item.imageUrl : "");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
-        // その他のサーバーエラー
         setError("サーバーエラーが発生しました。");
         setOpenErrorSnackbar(true);
         return;
       }
-      // axios 以外のエラー（ネットワーク、予期せぬエラーなど）
       setError("ネットワークエラーが発生しました。");
       setOpenErrorSnackbar(true);
     } finally {
       setLoading(false);
+      setOpenSnackbar(true);
+      router.push("/item");
     }
   };
 
@@ -129,6 +122,9 @@ export default function ItemEditPage() {
     try {
       setDeleteLoading(true);
       await api.delete(`/items/${itemId}`);
+      if (item && item.imageUrl) {
+        await deleteImageByUrl(item.imageUrl);
+      }
       router.push("/item");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
@@ -140,7 +136,6 @@ export default function ItemEditPage() {
       setOpenErrorSnackbar(true);
     } finally {
       setDeleteLoading(false);
-      setOpenSnackbar(true);
     }
   };
 
@@ -158,7 +153,6 @@ export default function ItemEditPage() {
         setNotes(data.notes);
         setIsFavorite(data.is_favorite);
 
-        // カテゴリ取得
         const categoriesRes = (await api.get("/categories")).data.data;
         setCategories(categoriesRes);
       } catch (err) {
@@ -179,54 +173,82 @@ export default function ItemEditPage() {
       }}
     >
       {/* ヘッダー */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
+      <Header
+        title="アイテム更新"
+        onBackAction={() => router.back()}
+        onFavoriteAction={() => {
+          setIsFavorite(!isFavorite);
         }}
-      >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
-          <ArrowBackIosNewIcon />
-        </IconButton>
+        isFavorite={isFavorite}
+      />
 
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          アイテム更新
-        </Typography>
+      {/* アイテム名 */}
+      <FieldInput
+        label="アイテム名"
+        value={name}
+        onChange={setName}
+        placeholder="トイレットペーパー"
+        required
+      />
 
-        {/* お気に入りアイコン */}
-        <IconButton
-          onClick={() => setIsFavorite(!isFavorite)}
-          sx={{
-            color: isFavorite ? "red" : "gray",
-            transition: "0.2s",
-          }}
-        >
-          {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-        </IconButton>
-      </Box>
+      {/* カテゴリ */}
+      <SelectFieldInput
+        label="カテゴリ"
+        value={categoryId}
+        onChange={(e) => setCategoryId(Number(e))}
+        placeholder="カテゴリを選択"
+        options={categories}
+        required
+      />
+
+      {/* ブランド名 */}
+      <FieldInput
+        label="ブランド名"
+        value={brand}
+        onChange={setBrand}
+        placeholder="カインズ"
+      />
+
+      {/* 単位 */}
+      <FieldInput
+        label="単位"
+        value={unit}
+        onChange={setUnit}
+        placeholder="個"
+      />
+
+      {/* 画像 */}
+      <ImagePicker previewUrl={previewUrl} onChange={handleImageChange} />
+
+      {/* メモ */}
+      <FieldInput
+        label="メモ（任意）"
+        value={notes}
+        onChange={setNotes}
+        placeholder="メモを入力"
+        large
+      />
+
+      {/* 更新ボタン */}
+      <PrimaryButton
+        onClick={() => setOpen(true)}
+        loading={loading}
+        label="更新"
+      />
+
+      {/* 削除ボタン */}
+      <DangerButton
+        onClick={() => setOpenDelete(true)}
+        loading={deleteLoading}
+        label="削除"
+      />
 
       <Snackbar
         open={openSnackbar}
         autoHideDuration={2500}
         onClose={() => setOpenSnackbar(false)}
       >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          登録しました
-        </Alert>
+        <Alert severity="success">更新しました</Alert>
       </Snackbar>
 
       <Snackbar
@@ -234,193 +256,31 @@ export default function ItemEditPage() {
         autoHideDuration={2500}
         onClose={() => setOpenErrorSnackbar(false)}
       >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       </Snackbar>
 
-      {/* アイテム名 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        アイテム名 *
-      </Typography>
-      <TextField
-        fullWidth
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="例：トイレットペーパー"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
+      <ConfirmDialog
+        open={open}
+        title="更新確認"
+        message="アイテムを更新します。"
+        confirmText="更新する"
+        onClose={() => setOpen(false)}
+        onConfirm={() => {
+          handleUpdate();
+          setOpen(false);
         }}
-        sx={{ marginBottom: 3 }}
       />
-
-      {/* カテゴリ */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        カテゴリ *
-      </Typography>
-      <TextField
-        select
-        fullWidth
-        value={categoryId}
-        onChange={(e) => setCategoryId(Number(e.target.value))}
-        placeholder="カテゴリを選択"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
+      <ConfirmDialog
+        open={openDelete}
+        title="削除確認"
+        message="アイテムを削除します。"
+        confirmText="削除する"
+        variant="danger"
+        onClose={() => setOpenDelete(false)}
+        onConfirm={() => {
+          handleDelete();
+          setOpenDelete(false);
         }}
-        sx={{ marginBottom: 3 }}
-      >
-        {categories.map((c) => (
-          <MenuItem key={c.id} value={c.id}>
-            {c.icon}
-            {c.name}
-          </MenuItem>
-        ))}
-      </TextField>
-
-      {/* ブランド名 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        ブランド名
-      </Typography>
-      <TextField
-        fullWidth
-        value={brand}
-        onChange={(e) => setBrand(e.target.value)}
-        placeholder="例：カインズ"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* 単位 */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>単位</Typography>
-      <TextField
-        fullWidth
-        value={unit}
-        onChange={(e) => setUnit(e.target.value)}
-        placeholder="例：個"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 0.5,
-          },
-        }}
-        sx={{ marginBottom: 3 }}
-      />
-
-      {/* 画像 */}
-      <Box sx={{ marginBottom: 3 }}>
-        <Button
-          variant="contained"
-          component="label"
-          sx={{
-            backgroundColor: "#32D26A",
-            borderRadius: "20px",
-            fontWeight: 700,
-            paddingY: 1.5,
-          }}
-        >
-          画像を選択する
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={handleImageChange}
-          />
-        </Button>
-
-        {previewUrl && (
-          <Box
-            sx={{
-              marginTop: 2,
-              width: "200px", // 👈 固定幅に変更
-              height: "200px",
-              borderRadius: "16px",
-              overflow: "hidden",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              mx: "auto", // 👈 中央寄せ
-            }}
-          >
-            <img
-              src={previewUrl}
-              alt="preview"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover", // 👈 トリミングして綺麗に見せる
-                display: "block",
-              }}
-            />
-          </Box>
-        )}
-      </Box>
-
-      {/* メモ */}
-      <Typography sx={{ fontWeight: 600, marginBottom: 1 }}>
-        メモ（任意）
-      </Typography>
-      <TextField
-        fullWidth
-        multiline
-        minRows={3}
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="メモを入力"
-        InputProps={{
-          sx: {
-            backgroundColor: "white",
-            borderRadius: "20px",
-            paddingY: 1,
-          },
-        }}
-        sx={{ marginBottom: 4 }}
-      />
-
-      {/* 更新ボタン */}
-      <Button
-        fullWidth
-        variant="contained"
-        sx={{
-          backgroundColor: "#32D26A",
-          paddingY: 2,
-          marginY: 3,
-          borderRadius: "40px",
-          fontWeight: 700,
-          fontSize: "18px",
-          color: "#FFFFFF",
-          boxShadow: "0 8px 16px rgba(50,210,106,0.4)",
-          "&:hover": {
-            backgroundColor: "#29C05F",
-          },
-        }}
-        onClick={handleUpdate}
-        disabled={loading}
-      >
-        {loading ? (
-          <CircularProgress size={26} sx={{ color: "white" }} />
-        ) : (
-          "更新する"
-        )}
-      </Button>
-
-      {/* 削除ボタン */}
-      <DangerButton
-        onClick={handleDelete}
-        loading={deleteLoading}
-        label="削除"
       />
     </Box>
   );

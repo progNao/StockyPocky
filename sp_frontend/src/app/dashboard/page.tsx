@@ -3,18 +3,13 @@
 import {
   Box,
   Typography,
-  Card,
-  Grid,
   IconButton,
-  Stack,
   MenuItem,
   Menu,
-  CardMedia,
-  CardContent,
   Snackbar,
   Alert,
 } from "@mui/material";
-import { ShoppingCart, Settings } from "@mui/icons-material";
+import { Settings } from "@mui/icons-material";
 import {
   Category,
   Item,
@@ -29,10 +24,13 @@ import { useAuthStore } from "@/stores/auth";
 import { api } from "@/libs/api/client";
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/stores/user";
-import ListAltIcon from "@mui/icons-material/ListAlt";
 import LoadingScreen from "@/components/LoadingScreen";
-import FooterDashBoard from "@/components/FooterDashBoard";
-import HistoryIcon from "@mui/icons-material/History";
+import Footer from "@/components/Footer";
+import DashboardMenuCard from "@/components/DashboardMenuCard";
+import DashboardStock from "@/components/DashboardStock";
+import DashboardShoppingList from "@/components/DashboardShoppingList";
+import DashboardMemo from "@/components/DashboardMemo";
+import { useFormatDate } from "@/hooks/useFormatDate";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -51,30 +49,17 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [shoppingList, setShoppingList] = useState<ShoppingListDisplay[]>([]);
   const [memoList, setMemoList] = useState<Memo[]>([]);
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-
-    const yyyy = d.getFullYear();
-    const MM = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    const ss = String(d.getSeconds()).padStart(2, "0");
-
-    return `${yyyy}/${MM}/${dd} ${hh}:${mm}:${ss}`;
-  };
+  const { formatDate } = useFormatDate();
 
   const handleLogout = async () => {
     try {
-      await api.post("/auth/logout"); // 正常レスポンスのみ想定
+      await api.post("/auth/logout");
       clearUser();
       localStorage.removeItem("access_token");
-      logout(); // ← 画面側でトークン破棄
+      logout();
       document.cookie = "access_token=; Max-Age=0; path=/;";
       router.push("/");
     } catch {
-      // エラーがあってもフロント側で破棄してログイン画面へ
       logout();
       router.push("/");
     }
@@ -83,16 +68,7 @@ export default function DashboardPage() {
   const isLowStock = (stock: number, threshold: number) => {
     const ratio = stock / threshold;
     if (ratio <= 0.2) return true;
-
     return false;
-  };
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
   };
 
   const mergeItemData = (
@@ -198,6 +174,7 @@ export default function DashboardPage() {
         p: 3,
         background: `#e9fff3`,
         paddingBottom: "120px",
+        minHeight: "100vh",
       }}
     >
       {/* ヘッダー */}
@@ -213,7 +190,7 @@ export default function DashboardPage() {
           こんにちは！ {displayName} さん
         </Typography>
         <IconButton
-          onClick={handleMenuOpen}
+          onClick={(e) => setAnchorEl(e.currentTarget)}
           sx={{
             position: "absolute",
             top: 16,
@@ -226,11 +203,23 @@ export default function DashboardPage() {
         </IconButton>
       </Box>
 
-      <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
+      <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
         <MenuItem onClick={handleLogout}>ログアウト</MenuItem>
-        <MenuItem onClick={() => router.push("/category")}>カテゴリ一覧</MenuItem>
-        <MenuItem onClick={() => router.push("/memo")}>メモ一覧</MenuItem>
       </Menu>
+
+      {/* メインメニューカード */}
+      <DashboardMenuCard />
+
+      {/* 今日のタスク */}
+      <DashboardMemo memos={memoList} />
+
+      {/* 在庫不足のアイテム */}
+      <DashboardStock items={lowStockItemList} isLowStock={isLowStock} />
+
+      {/* 最近の買い物リスト */}
+      <DashboardShoppingList items={shoppingList} formatDate={formatDate} />
+
+      <Footer />
 
       <Snackbar
         open={openErrorSnackbar}
@@ -241,282 +230,6 @@ export default function DashboardPage() {
           {error}
         </Alert>
       </Snackbar>
-
-      {/* メインメニューカード */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 4 }} textAlign="center">
-          <Card sx={{ borderRadius: 2, p: 2, textAlign: "center" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Box
-                onClick={() => router.push("/shopping-record")}
-                sx={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(50,210,106,0.15)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  cursor: "pointer",
-                }}
-              >
-                <HistoryIcon fontSize="large" sx={{ color: "#32D26A" }} />
-              </Box>
-            </Box>
-            <Typography sx={{ mt: 1, fontSize: 10 }}>購入履歴</Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 4 }}>
-          <Card sx={{ borderRadius: 2, p: 2, textAlign: "center" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Box
-                onClick={() => router.push("/item")}
-                sx={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(50,210,106,0.15)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  cursor: "pointer",
-                }}
-              >
-                <ListAltIcon fontSize="large" sx={{ color: "#32D26A" }} />
-              </Box>
-            </Box>
-            <Typography sx={{ mt: 1, fontSize: 10 }}>アイテムリスト</Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 4 }}>
-          <Card sx={{ borderRadius: 2, p: 2, textAlign: "center" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Box
-                onClick={() => router.push("/shopping-list")}
-                sx={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(50,210,106,0.15)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  cursor: "pointer",
-                }}
-              >
-                <ShoppingCart fontSize="large" sx={{ color: "#32D26A" }} />
-              </Box>
-            </Box>
-            <Typography sx={{ mt: 1, fontSize: 10 }}>買い物リスト</Typography>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* 今日のタスク */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-          今日のタスクとメモ
-        </Typography>
-        <Stack spacing={1}>
-          {memoList.map((memo) => (
-            <Card
-              key={memo.id}
-              sx={{
-                borderRadius: 2,
-                backgroundColor: memo.is_done ? "#e0f7e9" : "#fff",
-                p: 2,
-              }}
-            >
-              <Typography
-                sx={{ textDecoration: memo.is_done ? "line-through" : "none" }}
-              >
-                {memo.title}
-              </Typography>
-            </Card>
-          ))}
-        </Stack>
-      </Box>
-
-      {/* 在庫不足のアイテム */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-          在庫不足のアイテム
-        </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {lowStockItemList.length === 0 ? (
-            <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
-              在庫不足のアイテムはありません
-            </Typography>
-          ) : (
-            lowStockItemList.map((item) => (
-              <Card
-                key={item.id}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  borderRadius: "16px",
-                  padding: 1.5,
-                  backgroundColor: "#FFFFFF",
-                  boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
-                  border: isLowStock(item.stockQuantity, item.threshold)
-                    ? "3px solid #FBBF24"
-                    : "none",
-                  minHeight: 70,
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  image={item.imageUrl}
-                  sx={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: "10px",
-                    objectFit: "cover",
-                  }}
-                />
-
-                <CardContent
-                  sx={{
-                    flex: 1,
-                    padding: "8px 0 8px 12px",
-                    "&:last-child": { paddingBottom: "8px" },
-                  }}
-                >
-                  <Typography
-                    sx={{ fontSize: 12, color: "#4A9160", lineHeight: 1.2 }}
-                  >
-                    {item.categoryName}
-                  </Typography>
-                  <Typography
-                    sx={{ fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}
-                  >
-                    {item.name}
-                  </Typography>
-
-                  <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
-                    在庫数：{item.stockQuantity}
-                    {isLowStock(item.stockQuantity, item.threshold) && (
-                      <span style={{ color: "#D97706", fontWeight: "bold" }}>
-                        （残りわずか）
-                      </span>
-                    )}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </Box>
-      </Box>
-
-      {/* 最近の買い物リスト */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-          最近の買い物リスト
-        </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {shoppingList.length === 0 ? (
-            <Typography sx={{ color: "#7A7A7A", textAlign: "center", mt: 4 }}>
-              買い物リストのアイテムはありません
-            </Typography>
-          ) : (
-            shoppingList.map((item) => (
-              <Card
-                key={item.id}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  borderRadius: "16px",
-                  padding: 1.5,
-                  backgroundColor: "#FFFFFF",
-                  boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
-                  minHeight: 70,
-                }}
-              >
-                {/* 画像 */}
-                <CardMedia
-                  component="img"
-                  image={item.image_url}
-                  sx={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: "10px",
-                    objectFit: "cover",
-                  }}
-                />
-
-                {/* 名称 + 購入数 */}
-                <CardContent
-                  sx={{
-                    flex: 1,
-                    padding: "8px 0 8px 12px",
-                    "&:last-child": { paddingBottom: "8px" },
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Typography
-                    sx={{ fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}
-                  >
-                    {item.name}
-                  </Typography>
-                  <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
-                    購入数：{item.quantity}
-                  </Typography>
-                  <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
-                    {formatDate(item.added_at)}
-                  </Typography>
-                </CardContent>
-
-                {/* メモ */}
-                <Box
-                  sx={{
-                    minWidth: 120,
-                    paddingLeft: 1,
-                    paddingRight: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    border: item.notes ? "1px solid #00000020" : "",
-                    borderRadius: "6px",
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: 12,
-                      color: "#555",
-                      whiteSpace: "pre-line",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {item.notes || ""}
-                  </Typography>
-                </Box>
-              </Card>
-            ))
-          )}
-        </Box>
-      </Box>
-
-      {/* 下部ナビバー（仮） */}
-      <FooterDashBoard />
     </Box>
   );
 }

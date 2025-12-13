@@ -1,22 +1,15 @@
 "use client";
 
-import {
-  Box,
-  Typography,
-  IconButton,
-  Card,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import { Box, Typography, Card, Snackbar, Alert } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { StockHistory } from "@/app/types";
 import { api } from "@/libs/api/client";
-import axios from "axios";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { useFormatDate } from "@/hooks/useFormatDate";
 
 export default function StockHistoryPage({
   params,
@@ -29,28 +22,15 @@ export default function StockHistoryPage({
   const [error, setError] = useState("");
   const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
   const [itemName, setItemName] = useState("");
+  const { formatDate } = useFormatDate();
 
   const sortedItems = [...stockHistory].sort((a, b) => {
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-
-    const yyyy = d.getFullYear();
-    const MM = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    const ss = String(d.getSeconds()).padStart(2, "0");
-
-    return `${yyyy}/${MM}/${dd} ${hh}:${mm}:${ss}`;
-  };
-
   useEffect(() => {
-    const fetch = async () => {
+    const fetchStockHistory = async () => {
       try {
-        // 在庫履歴取得
         const stockH = (
           await api.get(`/items/${unwrapParams.id}/stock-history`)
         ).data.data;
@@ -58,20 +38,11 @@ export default function StockHistoryPage({
         const Item = (await api.get(`/items/${unwrapParams.id}`)).data.data;
         setItemName(Item.name);
       } catch (err) {
-        if (axios.isAxiosError(err) && err.response) {
-          const status = err.response.status;
-          if (status === 404) {
-            setStockHistory([]);
-            return;
-          }
-          // その他のサーバーエラー
-          setError("ログインに失敗しました。時間をおいて再度お試しください。");
-          setOpenErrorSnackbar(true);
-          return;
-        }
+        setError("在庫履歴取得エラー:" + err);
+        setOpenErrorSnackbar(true);
       }
     };
-    fetch();
+    fetchStockHistory();
   }, [unwrapParams.id]);
 
   return (
@@ -85,46 +56,16 @@ export default function StockHistoryPage({
       }}
     >
       {/* ヘッダー */}
+      <Header title={itemName} onBackAction={() => router.back()} />
+
       <Box
         sx={{
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 3,
+          flexDirection: "column",
+          gap: 2,
+          marginBottom: 10,
         }}
       >
-        {/* 左スペース（戻るボタン） */}
-        <IconButton onClick={() => router.back()} sx={{ color: "#154718" }}>
-          <ArrowBackIosNewIcon />
-        </IconButton>
-
-        {/* タイトル */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            textAlign: "center",
-            color: "#154718",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        >
-          {itemName}
-        </Typography>
-      </Box>
-
-      <Snackbar
-        open={openErrorSnackbar}
-        autoHideDuration={2500}
-        onClose={() => setOpenErrorSnackbar(false)}
-      >
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Box sx={{ px: 3, mt: 4, marginBottom: 10 }}>
         {sortedItems.map((h) => {
           const isIncrease = h.change > 0;
 
@@ -187,8 +128,17 @@ export default function StockHistoryPage({
         })}
       </Box>
 
-      {/* 下部ナビバー（仮） */}
       <Footer />
+
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={2500}
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

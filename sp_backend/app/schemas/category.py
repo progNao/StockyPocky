@@ -5,7 +5,7 @@ from pydantic import BaseModel, field_validator
 class CategoryResponse(BaseModel):
   id: int
   name: str
-  icon: str
+  icon: Optional[str] = None
   user_id: UUID
   
   model_config = {
