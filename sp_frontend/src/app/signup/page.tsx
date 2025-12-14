@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/libs/api/client";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -13,6 +12,8 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import axios from "axios";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/libs/firebase";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -43,20 +44,10 @@ export default function SignupPage() {
       return;
     }
     try {
-      await api.post("/auth/signup", {
-        name,
-        email,
-        password,
-      });
-
-      router.push("/login");
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push("/login/?signup=1");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
-        const status = err.response.status;
-        if (status === 409) {
-          setError("入力したユーザー名またはメールアドレスは登録済みです。");
-          return;
-        }
         // その他のサーバーエラー
         setError("ログインに失敗しました。時間をおいて再度お試しください。");
         return;
@@ -81,7 +72,6 @@ export default function SignupPage() {
         padding: 2,
       }}
     >
-
       <Container maxWidth="xs" sx={{ textAlign: "center" }}>
         {/* ロゴ（左上に傾けたカード風） */}
         <Box

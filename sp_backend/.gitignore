@@ -1,23 +1,85 @@
+# =====================
 # Python
+# =====================
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
 
-# Env
-.env
-.venv/
+# =====================
+# Virtual Environment
+# =====================
 venv/
+.env/
+.env.*
+.venv/
+pip-wheel-metadata/
 
-# DB (SQLite 使う場合)
-*.sqlite3
+# =====================
+# Environment variables
+# =====================
+.env
+.env.local
+.env.development
+.env.production
 
-# Test
-.pytest_cache/
-.mypy_cache/
+# =====================
+# Firebase
+# =====================
+serviceAccountKey.json
+firebase-service-account.json
+firebase-adminsdk*.json
+stockypocky-firebase-adminsdk-*.json
 
+# =====================
 # Logs
+# =====================
 *.log
+logs/
+uvicorn.log
 
-# OS files
+# =====================
+# Database
+# =====================
+*.sqlite3
+*.db
+alembic/versions/*.pyc
+
+# =====================
+# Alembic
+# =====================
+alembic.ini
+
+# =====================
+# IDE / Editor
+# =====================
+.vscode/
+.idea/
+*.swp
+*.swo
 .DS_Store
+
+# =====================
+# Test / Coverage
+# =====================
+.coverage
+htmlcov/
+.pytest_cache/
+
+# =====================
+# Cache / Temp
+# =====================
+.cache/
+.mypy_cache/
+.ruff_cache/
+
+# =====================
+# OS
+# =====================
+Thumbs.db

@@ -5,6 +5,6 @@ class User(Base):
   __tablename__ = "users"
 
   id = Column(UUID(as_uuid=True), primary_key=True, index=True, server_default="gen_random_uuid()")
-  name = Column(Text, nullable=False)
+  name = Column(Text)
   email = Column(Text, unique=True, nullable=False)
-  password = Column(Text, nullable=False)
+  firebase_uid = Column(Text)

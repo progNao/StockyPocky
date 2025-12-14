@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.api.v1.users_api import delete_user_api, get_user_api, get_users_api, update_user_api
 from app.schemas.response import SuccessResponse
-from app.schemas.user import SignupRequest
+from app.schemas.user import UpdateRequest
 from app.utils.auth import get_current_user
 from database import get_db
 
@@ -18,7 +18,7 @@ def get_user(user_id: UUID, db: Session = Depends(get_db)):
   return get_user_api(user_id, db)
 
 @router.put("/{user_id}", response_model=SuccessResponse)
-def update_user(user_id: UUID, payload: SignupRequest, db: Session = Depends(get_db)):
+def update_user(user_id: UUID, payload: UpdateRequest, db: Session = Depends(get_db)):
   return update_user_api(user_id, payload, db)
 
 @router.delete("/{user_id}", response_model=SuccessResponse)

@@ -20,7 +20,6 @@ import {
   Stock,
 } from "@/app/types";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/auth";
 import { api } from "@/libs/api/client";
 import { useCallback, useEffect, useState } from "react";
 import { useUserStore } from "@/stores/user";
@@ -31,13 +30,12 @@ import DashboardStock from "@/components/DashboardStock";
 import DashboardShoppingList from "@/components/DashboardShoppingList";
 import DashboardMemo from "@/components/DashboardMemo";
 import { useFormatDate } from "@/hooks/useFormatDate";
+import { logout } from "@/libs/logout";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { logout } = useAuthStore();
   const username = useUserStore((state) => state.username);
   const [displayName, setDisplayName] = useState<string | null>(null);
-  const { clearUser } = useUserStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const [lowStockItemList, setLowStockItemList] = useState<ItemListDisplay[]>(
@@ -52,17 +50,7 @@ export default function DashboardPage() {
   const { formatDate } = useFormatDate();
 
   const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout");
-    } catch {
-    } finally {
-      clearUser();
-      localStorage.removeItem("access_token");
-      logout();
-      document.cookie = "access_token=; Max-Age=0; path=/;";
-
-      router.push("/?logout=1");
-    }
+    await logout(router);
   };
 
   const isLowStock = (stock: number, threshold: number) => {
@@ -177,9 +165,11 @@ export default function DashboardPage() {
   return (
     <Box
       sx={{
-        p: 3,
-        background: `#e9fff3`,
-        paddingBottom: "120px",
+        backgroundColor: "#F2FFF5",
+        minHeight: "100vh",
+        padding: 3,
+        maxWidth: "100vw",
+        overflowX: "hidden",
       }}
     >
       {/* ヘッダー */}

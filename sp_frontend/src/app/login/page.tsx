@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "@/libs/api/client";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -16,6 +15,8 @@ import {
 import Image from "next/image";
 import axios from "axios";
 import { useUserStore } from "@/stores/user";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/libs/firebase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [openSignup, setOpenSignup] = useState(false);
 
   const validate = () => {
     if (!email || !password) {
@@ -50,17 +52,11 @@ export default function LoginPage() {
     }
 
     try {
-      const res = await api.post("/auth/login", {
-        email,
-        password,
-      });
-      const token = res.data.data.token;
-      const username = res.data.data.name;
-      localStorage.setItem("access_token", token);
-      localStorage.setItem("token_issued_at", Date.now().toString());
-      setToken(token);
-      setUsername(username);
-      document.cookie = `access_token=${token}; path=/;`;
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await cred.user.getIdToken();
+      localStorage.setItem("access_token", idToken);
+      setToken(idToken);
+      setUsername(cred.user.email ?? "");
       router.push("/dashboard");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
@@ -86,6 +82,10 @@ export default function LoginPage() {
     if (searchParams.get("expired") === "1") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setOpen(true);
+      router.replace("/login");
+    }
+    if (searchParams.get("signup") === "1") {
+      setOpenSignup(true);
       router.replace("/login");
     }
   }, [searchParams, router]);
@@ -250,6 +250,17 @@ export default function LoginPage() {
       >
         <Alert severity="warning" variant="filled">
           セッションの有効期限が切れました。再度ログインしてください。
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={openSignup}
+        autoHideDuration={4000}
+        onClose={() => setOpenSignup(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="success" variant="filled">
+          ユーザーを登録しました。ログインしてください。
         </Alert>
       </Snackbar>
     </Box>

@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.repositories.users_repo import delete_user, get_user, get_user_for_email_check, get_user_for_name_check, get_users, update_user
-from app.schemas.user import SignupRequest, UserResponse
+from app.schemas.user import UpdateRequest, UserResponse
 from app.utils.response import error, success
 from app.utils.security import hash_password
 
@@ -19,7 +19,7 @@ def get_user_api(user_id: UUID, db: Session):
   
   return success(UserResponse.model_validate(user))
 
-def update_user_api(user_id: UUID, request: SignupRequest, db: Session):
+def update_user_api(user_id: UUID, request: UpdateRequest, db: Session):
   user = __private_user_check(user_id, db)
   
   existing_name = get_user_for_name_check(request, user_id, db)

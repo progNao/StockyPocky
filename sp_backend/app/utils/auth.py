@@ -1,40 +1,41 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
-from jose import JWTError
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from firebase_admin import auth
 from sqlalchemy.orm import Session
-from app.repositories.users_repo import get_user_for_name_only
-from app.utils.jwt import decode_access_token
+
+from app.models.user import User
 from database import get_db
 
-# JWTの設定
-SECRET_KEY = "supersecretkey"  # 本番では.env管理
-ALGORITHM = "HS256"
+security = HTTPBearer()
 
-# FastAPI 用の OAuth2 スキーム
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+def get_current_user(
+    cred: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+) -> User:
+    try:
+      decoded = auth.verify_id_token(cred.credentials)
+    except Exception as e:
+      print("VERIFY ERROR >>>", repr(e))
+      raise HTTPException(status_code=401, detail="Invalid token")
 
-api_key_header = APIKeyHeader(name="Authorization")
+    firebase_uid = decoded["uid"]
+    email = decoded.get("email")
 
-# トークンを検証してユーザー情報を返す関数
-def get_current_user(token: str = Depends(api_key_header), db: Session = Depends(get_db)):
-  credentials_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
-  )
-  
-  if not token.startswith("Bearer "):
-    raise HTTPException(status_code=401, detail="Invalid token")
-  token_value = token.split(" ")[1]
+    user = db.query(User).filter(
+      User.firebase_uid == firebase_uid
+    ).first()
 
-  try:
-    payload = decode_access_token(token_value)
-    name: str = payload.get("sub")
-    if name is None:
-      raise credentials_exception
-  except JWTError:
-    raise credentials_exception
+    if user:
+      return user
 
-  user = get_user_for_name_only(name, db)
-  if user is None:
-    raise credentials_exception
-  return user
+    # 🔽 初回ログイン時のみ作成
+    user = User(
+      email=email,
+      name=email.split("@")[0],
+      firebase_uid=firebase_uid,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return user
