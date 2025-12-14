@@ -11,7 +11,7 @@ app = FastAPI(title="StockyPocky")
 init_firebase()
 
 origins = [
-  "http://localhost:3000",
+  "*",
 ]
 
 app.add_middleware(
