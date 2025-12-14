@@ -22,7 +22,6 @@ import {
 import { useRouter } from "next/navigation";
 import { api } from "@/libs/api/client";
 import { useCallback, useEffect, useState } from "react";
-import { useUserStore } from "@/stores/user";
 import LoadingScreen from "@/components/LoadingScreen";
 import Footer from "@/components/Footer";
 import DashboardMenuCard from "@/components/DashboardMenuCard";
@@ -34,7 +33,6 @@ import { logout } from "@/libs/logout";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const username = useUserStore((state) => state.username);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -121,7 +119,6 @@ export default function DashboardPage() {
   );
 
   useEffect(() => {
-    setDisplayName(username);
     const fetchAll = async () => {
       try {
         setLoading(true);
@@ -143,6 +140,9 @@ export default function DashboardPage() {
         const dataMemo = resMemo.data.data;
         setMemoList(dataMemo);
 
+        const res = await api.get("/users/me");
+        setDisplayName(res.data.data.name);
+
         // 表示アイテムの整形
         const mergeData = mergeItemData(dataItems, dataCategories, dataStocks);
         setLowStockItemList(mergeData);
@@ -158,7 +158,7 @@ export default function DashboardPage() {
     };
 
     fetchAll();
-  }, [username, mergeItemData, mergeShoppingData]);
+  }, [mergeItemData, mergeShoppingData]);
 
   if (loading) return <LoadingScreen />;
 
@@ -199,6 +199,7 @@ export default function DashboardPage() {
       </Box>
 
       <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
+        <MenuItem onClick={() => router.push("/settings")}>アカウント設定</MenuItem>
         <MenuItem onClick={handleLogout}>ログアウト</MenuItem>
       </Menu>
 

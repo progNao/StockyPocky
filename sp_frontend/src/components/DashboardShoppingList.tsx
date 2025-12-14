@@ -23,7 +23,7 @@ export default function DashboardShoppingList({
   formatDate,
 }: Props) {
   return (
-    <Box sx={{ mb: 4 }}>
+    <Box sx={{ mb: 10 }}>
       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
         {title}
       </Typography>

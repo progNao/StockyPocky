@@ -10,6 +10,5 @@ class UserResponse(BaseModel):
     "from_attributes": True
   }
 
-class UpdateRequest(BaseModel):
-  email: str
+class UpdateMeRequest(BaseModel):
   name: str
