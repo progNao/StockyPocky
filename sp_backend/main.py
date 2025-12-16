@@ -10,9 +10,10 @@ from firebase import init_firebase
 app = FastAPI(title="StockyPocky")
 init_firebase()
 
-origins=[
-  "https://stocky-pocky.vercel.app/",
-],
+origins = [
+  "http://localhost:3000", 
+  "https://stocky-pocky.vercel.app",
+]
 
 app.add_middleware(
   CORSMiddleware,
