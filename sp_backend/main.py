@@ -10,9 +10,10 @@ from firebase import init_firebase
 app = FastAPI(title="StockyPocky")
 init_firebase()
 
-origins = [
-  "*",
-]
+origins=[
+  "https://stocky-pocky-git-main-naochis-projects-69fd0fc2.vercel.app/",
+  "https://stocky-pocky-2rywxr92c-naochis-projects-69fd0fc2.vercel.app/",
+],
 
 app.add_middleware(
   CORSMiddleware,
