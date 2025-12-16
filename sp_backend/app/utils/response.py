@@ -1,5 +1,8 @@
 from fastapi.responses import JSONResponse
-from schemas.response import ErrorResponse
+from app.schemas.response import ErrorResponse
+
+def success(data):
+  return {"success": True, "data": data}
 
 def error(message: str, status_code: int = 400):
   return JSONResponse(
