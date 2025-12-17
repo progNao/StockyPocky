@@ -14,7 +14,7 @@ type Props = {
 };
 
 export default function DashboardMemo({
-  title = "今日のタスクとメモ",
+  title = "メモ",
   memos,
 }: Props) {
   return (

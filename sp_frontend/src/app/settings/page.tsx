@@ -101,6 +101,7 @@ export default function AccountPage() {
           boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
         }}
       >
+        <span style={{ color: "red" }}>まだ使えません</span>
         {/* 在庫不足通知 */}
         <Box
           sx={{

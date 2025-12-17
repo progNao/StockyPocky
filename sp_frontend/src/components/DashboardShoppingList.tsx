@@ -18,7 +18,7 @@ type Props = {
 };
 
 export default function DashboardShoppingList({
-  title = "最近の買い物リスト",
+  title = "買い物リスト",
   items,
   formatDate,
 }: Props) {

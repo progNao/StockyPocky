@@ -36,7 +36,7 @@ export default function DashboardMenuCard() {
               <HistoryIcon fontSize="large" sx={{ color: "#32D26A" }} />
             </Box>
           </Box>
-          <Typography sx={{ mt: 1, fontSize: 10 }}>購入履歴</Typography>
+          <Typography sx={{ mt: 1, fontSize: 9 }}>購入履歴</Typography>
         </Card>
       </Grid>
       <Grid size={{ xs: 4 }}>
@@ -64,7 +64,7 @@ export default function DashboardMenuCard() {
               <ListAltIcon fontSize="large" sx={{ color: "#32D26A" }} />
             </Box>
           </Box>
-          <Typography sx={{ mt: 1, fontSize: 10 }}>アイテムリスト</Typography>
+          <Typography sx={{ mt: 1, fontSize: 9 }}>アイテムリスト</Typography>
         </Card>
       </Grid>
       <Grid size={{ xs: 4 }}>
@@ -92,7 +92,7 @@ export default function DashboardMenuCard() {
               <ShoppingCart fontSize="large" sx={{ color: "#32D26A" }} />
             </Box>
           </Box>
-          <Typography sx={{ mt: 1, fontSize: 10 }}>買い物リスト</Typography>
+          <Typography sx={{ mt: 1, fontSize: 9 }}>買い物リスト</Typography>
         </Card>
       </Grid>
     </Grid>

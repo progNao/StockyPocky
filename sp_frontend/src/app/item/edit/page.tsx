@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Snackbar, Alert } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { api } from "@/libs/api/client";
@@ -43,8 +43,7 @@ export default function ItemEditPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let changeFlg = false;
+  const imageChangedRef = useRef(false);
 
   const deleteImageByUrl = async (imageUrl: string) => {
     const imageRef = ref(storage, imageUrl);
@@ -59,7 +58,7 @@ export default function ItemEditPage() {
   };
 
   const handleImageChange = async (file: File) => {
-    changeFlg = true;
+    imageChangedRef.current = true;
     if (!file) {
       setPreviewUrl(imageUrl);
       return;
@@ -91,7 +90,13 @@ export default function ItemEditPage() {
     }
     try {
       setLoading(true);
-      const url = await uploadImage(imageFile);
+      let url: string = imageUrl;
+      if (imageChangedRef.current && imageFile) {
+        const uploadedUrl = await uploadImage(imageFile);
+        if (uploadedUrl) {
+          url = uploadedUrl;
+        }
+      }
       await api.put(`/items/${itemId}`, {
         name,
         brand,
@@ -102,7 +107,9 @@ export default function ItemEditPage() {
         is_favorite: isFavorite,
         category_id: categoryId,
       });
-      await deleteImageByUrl(item ? item.imageUrl : "");
+      if (imageChangedRef.current && item?.imageUrl && item.imageUrl !== url) {
+        await deleteImageByUrl(item.imageUrl);
+      }
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
         setError("サーバーエラーが発生しました。");

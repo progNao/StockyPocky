@@ -44,9 +44,7 @@ export default function ItemsPage() {
   const [selectedCategoryName, setSelectedCategoryName] = useState("");
 
   const isLowStock = (stock: number, threshold: number) => {
-    const ratio = stock / threshold;
-    if (ratio <= 0.2) return true;
-    return false;
+    return stock < threshold;
   };
 
   const filteredItems = itemList
@@ -84,6 +82,7 @@ export default function ItemsPage() {
         threshold: stock ? stock.threshold : 0,
         imageUrl: item.image_url,
         location: stock ? stock.location : "",
+        unit: item.unit,
       };
     });
     return result;
@@ -191,7 +190,7 @@ export default function ItemsPage() {
                 backgroundColor: "#FFFFFF",
                 boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
                 border: isLowStock(item.stockQuantity, item.threshold)
-                  ? "3px solid #FBBF24"
+                  ? "2px solid #FBBF24"
                   : "none",
                 cursor: "pointer",
               }}
@@ -200,8 +199,8 @@ export default function ItemsPage() {
                 component="img"
                 image={item.imageUrl}
                 sx={{
-                  width: 80,
-                  height: 80,
+                  width: 60,
+                  height: 60,
                   borderRadius: "12px",
                   objectFit: "cover",
                 }}
@@ -215,8 +214,8 @@ export default function ItemsPage() {
                   {item.name}
                 </Typography>
 
-                <Typography sx={{ fontSize: 12 }}>
-                  在庫数：{item.stockQuantity}
+                <Typography sx={{ fontSize: 10 }}>
+                  在庫数：{item.stockQuantity}{item.unit}
                   {isLowStock(item.stockQuantity, item.threshold) && (
                     <p
                       style={{

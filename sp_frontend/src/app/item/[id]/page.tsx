@@ -92,6 +92,7 @@ export default function ItemDetailPage({
       threshold: dataStocks ? dataStocks.threshold : 0,
       imageUrl: dataItems.image_url,
       location: dataStocks ? dataStocks.location : "",
+      unit: dataItems.unit,
     };
   };
 
@@ -272,7 +273,7 @@ export default function ItemDetailPage({
               現在の在庫数
             </Typography>
             <Typography fontWeight="bold" fontSize="28px">
-              {stock_in_de}個
+              {stock_in_de}{item.unit}
             </Typography>
           </Box>
 
@@ -283,7 +284,7 @@ export default function ItemDetailPage({
               閾値
             </Typography>
             <Typography fontWeight="bold" fontSize="28px">
-              {threshold_in_de}個
+              {threshold_in_de}{item.unit}
             </Typography>
           </Box>
         </Box>

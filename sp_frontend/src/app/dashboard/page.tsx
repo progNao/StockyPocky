@@ -52,9 +52,7 @@ export default function DashboardPage() {
   };
 
   const isLowStock = (stock: number, threshold: number) => {
-    const ratio = stock / threshold;
-    if (ratio <= 0.2) return true;
-    return false;
+    return stock < threshold;
   };
 
   const mergeItemData = useCallback(
@@ -79,6 +77,7 @@ export default function DashboardPage() {
           threshold: stock ? stock.threshold : 0,
           imageUrl: item.image_url,
           location: stock ? stock.location : "",
+          unit: item.unit,
         };
       });
       return result

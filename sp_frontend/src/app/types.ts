@@ -38,6 +38,7 @@ export interface ItemListDisplay {
   threshold: number;
   imageUrl: string;
   location: string;
+  unit: string;
 }
 
 export interface StockHistory {

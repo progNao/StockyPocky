@@ -8,6 +8,7 @@ type Item = {
   categoryName: string;
   stockQuantity: number;
   threshold: number;
+  unit: string;
   imageUrl?: string;
 };
 
@@ -47,7 +48,7 @@ export default function DashboardStock({
                   padding: 1.5,
                   backgroundColor: "#FFFFFF",
                   boxShadow: "0px 1px 4px rgba(0,0,0,0.05)",
-                  border: low ? "3px solid #FBBF24" : "none",
+                  border: low ? "2px solid #FBBF24" : "none",
                   minHeight: 70,
                 }}
               >
@@ -82,7 +83,7 @@ export default function DashboardStock({
                   </Typography>
 
                   <Typography sx={{ fontSize: 13, lineHeight: 1.2 }}>
-                    在庫数：{item.stockQuantity}
+                    在庫数：{item.stockQuantity}{item.unit}
                     {low && (
                       <Box
                         component="span"
